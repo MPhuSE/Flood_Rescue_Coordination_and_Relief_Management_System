@@ -1,4 +1,8 @@
 package com.floodrescue.floodrescuesystem.service;
 
-public class UserService {
+import com.floodrescue.floodrescuesystem.dto.response.UserProfileResponse;
+
+public interface UserService {
+
+    UserProfileResponse getCurrentUserProfile(String username);
 }
