@@ -49,7 +49,8 @@ public class RescueRequestService {
         try {
             urgencyLevel = UrgencyLevel.valueOf(requestDTO.getUrgencyLevel().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Mức độ khẩn cấp không hợp lệ. Vui lòng sử dụng: LOW, MEDIUM, HIGH, CRITICAL");
+            throw new BadRequestException(
+                    "Mức độ khẩn cấp không hợp lệ. Vui lòng sử dụng: LOW, MEDIUM, HIGH, CRITICAL");
         }
 
         // Tạo rescue request mới
@@ -60,8 +61,7 @@ public class RescueRequestService {
                 requestDTO.getLatitude(),
                 requestDTO.getLongitude(),
                 requestDTO.getImage(),
-                urgencyLevel
-        );
+                urgencyLevel);
 
         // Lưu vào database
         RescueRequest savedRequest = rescueRequestRepository.save(rescueRequest);
@@ -80,7 +80,7 @@ public class RescueRequestService {
     }
 
     /**
-     * Lấy chi tiết yêu cầu cứu hộ theo ID
+     * Tìm kiếm yêu cầu cứu hộ theo ID
      */
     public RescueRequestResponse getRescueRequestById(Long requestId) {
         RescueRequest rescueRequest = rescueRequestRepository.findById(requestId)
@@ -238,12 +238,12 @@ public class RescueRequestService {
         response.setStatus(rescueRequest.getStatus());
         response.setCreatedTime(rescueRequest.getCreatedTime());
         response.setUpdatedTime(rescueRequest.getUpdatedTime());
-        
+
         if (rescueRequest.getAssignedTeam() != null) {
             response.setAssignedTeamId(rescueRequest.getAssignedTeam().getTeamId());
             response.setAssignedTeamName(rescueRequest.getAssignedTeam().getTeamName());
         }
-        
+
         response.setNotes(rescueRequest.getNotes());
         return response;
     }
