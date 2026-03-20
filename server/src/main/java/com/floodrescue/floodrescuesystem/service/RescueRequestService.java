@@ -43,6 +43,15 @@ public class RescueRequestService {
         if (requestDTO.getLocation() == null || requestDTO.getLocation().trim().isEmpty()) {
             throw new BadRequestException("Địa điểm không được để trống");
         }
+        if (requestDTO.getLatitude() == null) {
+            throw new BadRequestException("Vĩ độ không được để trống");
+        }
+        if (requestDTO.getLongitude() == null) {
+            throw new BadRequestException("Kinh độ không được để trống");
+        }
+        if (requestDTO.getUrgencyLevel() == null || requestDTO.getUrgencyLevel().trim().isEmpty()) {
+            throw new BadRequestException("Mức độ khẩn cấp không được để trống");
+        }
 
         // Parse urgency level
         UrgencyLevel urgencyLevel;

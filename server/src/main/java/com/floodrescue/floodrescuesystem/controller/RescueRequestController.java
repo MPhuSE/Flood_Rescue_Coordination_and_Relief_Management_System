@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -32,10 +33,7 @@ public class RescueRequestController {
 
                 return ResponseEntity
                                 .status(HttpStatus.CREATED)
-                                .body(new ApiResponse<>(
-                                                true,
-                                                "Tạo yêu cầu cứu hộ thành công",
-                                                response));
+                                .body(ApiResponse.success("Tạo yêu cầu cứu hộ thành công", response));
         }
 
         /**
@@ -46,70 +44,82 @@ public class RescueRequestController {
         public ResponseEntity<ApiResponse<List<RescueRequestResponse>>> getAllRescueRequests() {
                 List<RescueRequestResponse> responses = rescueRequestService.getAllRescueRequests();
 
-                return ResponseEntity.ok(new ApiResponse<>(
-                                true,
-                                "Lấy danh sách yêu cầu cứu hộ thành công",
-                                responses));
+                return ResponseEntity.ok(ApiResponse.success("Lấy danh sách yêu cầu cứu hộ thành công", responses));
         }
 
         /**
-         * Lấy chi tiết yêu cầu cứu hộ theo ID
+         * Xem thông tin chi tiết một yêu cầu cứu hộ theo ID
+         * GET /api/rescue-requests/{id}
          */
         @GetMapping("/{id}")
         public ResponseEntity<ApiResponse<RescueRequestResponse>> getRescueRequestById(@PathVariable Long id) {
                 RescueRequestResponse response = rescueRequestService.getRescueRequestById(id);
+
                 return ResponseEntity.ok(ApiResponse.success("Lấy thông tin chi tiết thành công", response));
         }
 
         /**
+         * Lấy danh sách yêu cầu của một người dùng cụ thể
+         * GET /api/rescue-requests/user/{userId}
+         */
+        @GetMapping("/user/{userId}")
+        public ResponseEntity<ApiResponse<List<RescueRequestResponse>>> getUserRequests(@PathVariable Long userId) {
+                List<RescueRequestResponse> responses = rescueRequestService.getUserRescueRequests(userId);
+
+                return ResponseEntity
+                                .ok(ApiResponse.success("Lấy danh sách yêu cầu của người dùng thành công", responses));
+        }
+
+        /**
          * Cập nhật trạng thái yêu cầu cứu hộ
+         * PATCH /api/rescue-requests/{id}/status?status=COMPLETED
          */
         @PatchMapping("/{id}/status")
         public ResponseEntity<ApiResponse<RescueRequestResponse>> updateStatus(
                         @PathVariable Long id,
                         @RequestParam String status) {
+
                 RescueRequestResponse response = rescueRequestService.updateRescueRequestStatus(id, status);
+
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái thành công", response));
         }
 
         /**
-         * Giao yêu cầu cứu hộ cho đội
+         * Giao yêu cầu cứu hộ cho một đội
+         * POST /api/rescue-requests/{id}/assign/{teamId}
          */
         @PostMapping("/{id}/assign/{teamId}")
         public ResponseEntity<ApiResponse<RescueRequestResponse>> assignToTeam(
                         @PathVariable Long id,
                         @PathVariable Long teamId) {
+
                 RescueRequestResponse response = rescueRequestService.assignRescueRequestToTeam(id, teamId);
+
                 return ResponseEntity.ok(ApiResponse.success("Giao đội cứu hộ thành công", response));
         }
 
         /**
-         * Cập nhật thông tin yêu cầu cứu hộ
+         * Cập nhật thông tin yêu cầu (Sửa mô tả, vị trí...)
+         * PUT /api/rescue-requests/{id}
          */
         @PutMapping("/{id}")
-        public ResponseEntity<ApiResponse<RescueRequestResponse>> updateRescueRequest(
+        public ResponseEntity<ApiResponse<RescueRequestResponse>> updateRequest(
                         @PathVariable Long id,
                         @Valid @RequestBody CreateRescueRequestDTO requestDTO) {
+
                 RescueRequestResponse response = rescueRequestService.updateRescueRequest(id, requestDTO);
+
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật yêu cầu thành công", response));
         }
 
         /**
          * Xóa yêu cầu cứu hộ
+         * DELETE /api/rescue-requests/{id}
          */
         @DeleteMapping("/{id}")
-        public ResponseEntity<ApiResponse<Void>> deleteRescueRequest(@PathVariable Long id) {
+        public ResponseEntity<ApiResponse<Void>> deleteRequest(@PathVariable Long id) {
                 rescueRequestService.deleteRescueRequest(id);
-                return ResponseEntity.ok(ApiResponse.success("Xóa yêu cầu thành công", null));
-        }
 
-        /**
-         * Lấy danh sách yêu cầu cứu hộ của một người dùng cụ thể
-         */
-        @GetMapping("/user/{userId}")
-        public ResponseEntity<ApiResponse<List<RescueRequestResponse>>> getUserRequests(@PathVariable Long userId) {
-                List<RescueRequestResponse> responses = rescueRequestService.getUserRescueRequests(userId);
-                return ResponseEntity
-                                .ok(ApiResponse.success("Lấy danh sách yêu cầu của người dùng thành công", responses));
+                return ResponseEntity.ok(ApiResponse.success("Xóa yêu cầu thành công", null));
         }
 }

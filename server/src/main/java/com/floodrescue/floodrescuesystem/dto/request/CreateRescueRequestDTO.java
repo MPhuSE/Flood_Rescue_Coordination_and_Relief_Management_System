@@ -2,6 +2,8 @@ package com.floodrescue.floodrescuesystem.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
 
 public class CreateRescueRequestDTO {
 
@@ -11,19 +13,27 @@ public class CreateRescueRequestDTO {
     @NotBlank(message = "Địa điểm không được để trống")
     private String location;
 
+    @NotNull(message = "Vĩ độ không được để trống")
+    @DecimalMin(value = "-90.0", message = "Vĩ độ phải từ -90 đến 90")
+    @DecimalMax(value = "90.0", message = "Vĩ độ phải từ -90 đến 90")
     private Double latitude;
+
+    @NotNull(message = "Kinh độ không được để trống")
+    @DecimalMin(value = "-180.0", message = "Kinh độ phải từ -180 đến 180")
+    @DecimalMax(value = "180.0", message = "Kinh độ phải từ -180 đến 180")
     private Double longitude;
 
     private String image;
 
-    @NotNull(message = "Mức độ khẩn cấp không được để trống")
+    @NotBlank(message = "Mức độ khẩn cấp không được để trống")
     private String urgencyLevel;
 
-    public CreateRescueRequestDTO() {}
+    public CreateRescueRequestDTO() {
+    }
 
-    public CreateRescueRequestDTO(String description, String location, 
-                                  Double latitude, Double longitude, 
-                                  String image, String urgencyLevel) {
+    public CreateRescueRequestDTO(String description, String location,
+            Double latitude, Double longitude,
+            String image, String urgencyLevel) {
         this.description = description;
         this.location = location;
         this.latitude = latitude;
