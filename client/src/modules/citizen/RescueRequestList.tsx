@@ -16,6 +16,7 @@ interface RescueRequest {
 export default function RescueRequestList() {
   const [requests, setRequests] = useState<RescueRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [acceptingId, setAcceptingId] = useState<number | null>(null);
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED'>('ALL');
   const [selectedRequest, setSelectedRequest] = useState<RescueRequest | null>(null);
 
@@ -41,45 +42,44 @@ export default function RescueRequestList() {
     setSelectedRequest(request);
   };
 
-  const handleAccept = (request: RescueRequest) => {
-    alert(`Bạn đã chấp nhận yêu cầu #${request.requestId}`);
+  const handleAccept = async (request: RescueRequest) => {
+    if (acceptingId === request.requestId) {
+      return;
+    }
+
+    try {
+      setAcceptingId(request.requestId);
+
+      const response = await fetch(
+        `http://localhost:8080/api/rescue-requests/${request.requestId}/status?status=IN_PROGRESS`,
+        { method: 'PATCH' }
+      );
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data?.message || 'Cập nhật trạng thái thất bại');
+      }
+
+      setRequests((prev) =>
+        prev.map((item) =>
+          item.requestId === request.requestId ? { ...item, status: 'IN_PROGRESS' } : item
+        )
+      );
+
+      setSelectedRequest((prev) =>
+        prev && prev.requestId === request.requestId ? { ...prev, status: 'IN_PROGRESS' } : prev
+      );
+    } catch (error) {
+      console.error('Failed to accept request:', error);
+      alert('Không thể cập nhật trạng thái yêu cầu. Vui lòng thử lại.');
+    } finally {
+      setAcceptingId(null);
+    }
   };
 
   const filteredRequests = filter === 'ALL' 
     ? requests 
     : requests.filter((req: RescueRequest) => req.status === filter);
-
-  const getUrgencyColor = (level: string) => {
-    switch (level) {
-      case 'CRITICAL':
-        return 'bg-red-100 text-red-800 border-red-300';
-      case 'HIGH':
-        return 'bg-orange-100 text-orange-800 border-orange-300';
-      case 'MEDIUM':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'LOW':
-        return 'bg-green-100 text-green-800 border-green-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'bg-blue-100 text-blue-800';
-      case 'ASSIGNED':
-        return 'bg-purple-100 text-purple-800';
-      case 'IN_PROGRESS':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
-      case 'CANCELLED':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
@@ -677,23 +677,27 @@ export default function RescueRequestList() {
                         {request.status === 'PENDING' && (
                           <button 
                             onClick={() => handleAccept(request)}
+                            disabled={acceptingId === request.requestId}
                             style={{
                               padding: '0.5rem 1rem',
-                              backgroundColor: '#16a34a',
+                              backgroundColor: acceptingId === request.requestId ? '#9ca3af' : '#16a34a',
                               color: 'white',
                               borderRadius: '0.5rem',
                               border: 'none',
-                              cursor: 'pointer',
+                              cursor: acceptingId === request.requestId ? 'not-allowed' : 'pointer',
                               fontWeight: '600',
                               transition: 'background-color 0.2s'
                             }}
                             onMouseEnter={(e) => {
-                              (e.currentTarget as HTMLElement).style.backgroundColor = '#15803d';
+                              if (acceptingId !== request.requestId) {
+                                (e.currentTarget as HTMLElement).style.backgroundColor = '#15803d';
+                              }
                             }}
                             onMouseLeave={(e) => {
-                              (e.currentTarget as HTMLElement).style.backgroundColor = '#16a34a';
+                              (e.currentTarget as HTMLElement).style.backgroundColor =
+                                acceptingId === request.requestId ? '#9ca3af' : '#16a34a';
                             }}>
-                              Chấp nhận
+                              {acceptingId === request.requestId ? 'Đang cập nhật...' : 'Chấp nhận'}
                             </button>
                         )}
                       </div>
