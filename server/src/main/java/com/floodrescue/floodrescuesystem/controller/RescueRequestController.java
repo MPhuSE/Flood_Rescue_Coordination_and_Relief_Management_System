@@ -1,6 +1,7 @@
 package com.floodrescue.floodrescuesystem.controller;
 
 import com.floodrescue.floodrescuesystem.dto.request.CreateRescueRequestDTO;
+import com.floodrescue.floodrescuesystem.dto.request.VerifyRescueRequestDTO;
 import com.floodrescue.floodrescuesystem.dto.response.ApiResponse;
 import com.floodrescue.floodrescuesystem.dto.response.RescueRequestResponse;
 import com.floodrescue.floodrescuesystem.service.RescueRequestService;
@@ -110,6 +111,24 @@ public class RescueRequestController {
                 RescueRequestResponse response = rescueRequestService.updateRescueRequest(id, requestDTO);
 
                 return ResponseEntity.ok(ApiResponse.success("Cập nhật yêu cầu thành công", response));
+        }
+
+        /**
+         * Xác minh yêu cầu cứu hộ (duyệt hoặc từ chối)
+         * PATCH /api/rescue-requests/{id}/verify
+         */
+        @PatchMapping("/{id}/verify")
+        public ResponseEntity<ApiResponse<RescueRequestResponse>> verifyRescueRequest(
+                        @PathVariable Long id,
+                        @Valid @RequestBody VerifyRescueRequestDTO verifyDTO) {
+
+                RescueRequestResponse response = rescueRequestService.verifyRescueRequest(id, verifyDTO);
+
+                String message = verifyDTO.getApproved()
+                                ? "Xác minh yêu cầu cứu hộ thành công"
+                                : "Từ chối yêu cầu cứu hộ thành công";
+
+                return ResponseEntity.ok(ApiResponse.success(message, response));
         }
 
         /**

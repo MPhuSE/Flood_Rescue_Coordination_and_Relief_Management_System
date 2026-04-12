@@ -2,6 +2,7 @@ package com.floodrescue.floodrescuesystem.entity;
 
 public enum RequestStatus {
     PENDING("Đang chờ"),
+    VERIFIED("Đã xác minh"),
     ASSIGNED("Được giao"),
     IN_PROGRESS("Đang xử lý"),
     COMPLETED("Hoàn thành"),

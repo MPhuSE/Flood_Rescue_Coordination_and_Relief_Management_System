@@ -1,6 +1,7 @@
 package com.floodrescue.floodrescuesystem.service;
 
 import com.floodrescue.floodrescuesystem.dto.request.CreateRescueRequestDTO;
+import com.floodrescue.floodrescuesystem.dto.request.VerifyRescueRequestDTO;
 import com.floodrescue.floodrescuesystem.dto.response.RescueRequestResponse;
 import com.floodrescue.floodrescuesystem.entity.*;
 import com.floodrescue.floodrescuesystem.exception.BadRequestException;
@@ -255,5 +256,31 @@ public class RescueRequestService {
 
         response.setNotes(rescueRequest.getNotes());
         return response;
+    }
+
+    public RescueRequestResponse verifyRescueRequest(Long requestId, VerifyRescueRequestDTO verifyDTO) {
+        RescueRequest rescueRequest = rescueRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Yêu cầu cứu hộ không tồn tại với ID: " + requestId));
+
+        if (rescueRequest.getStatus() != RequestStatus.PENDING) {
+            throw new BadRequestException(
+                    "Chỉ có thể xác minh yêu cầu đang ở trạng thái chờ duyệt. Trạng thái hiện tại: "
+                            + rescueRequest.getStatus().getDisplayName());
+        }
+
+        if (verifyDTO.getApproved()) {
+            rescueRequest.setStatus(RequestStatus.VERIFIED);
+        } else {
+            rescueRequest.setStatus(RequestStatus.REJECTED);
+        }
+
+        if (verifyDTO.getNotes() != null && !verifyDTO.getNotes().trim().isEmpty()) {
+            rescueRequest.setNotes(verifyDTO.getNotes());
+        }
+
+        rescueRequest.setUpdatedTime(LocalDateTime.now());
+
+        RescueRequest updatedRequest = rescueRequestRepository.save(rescueRequest);
+        return mapToResponse(updatedRequest);
     }
 }
