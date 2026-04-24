@@ -1,23 +1,9 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../components/common/button";
-import SectionLabel from "../components/common/section-label";
-import SurfaceCard from "../components/common/surface-card";
-import InputField from "../components/form/input-field";
 import { register } from "../modules/auth/auth.service";
 import { getAuthErrorMessage } from "../modules/auth/auth.utils";
-import AuthShell from "../modules/auth/components/auth-shell";
-import AuthShowcase from "../modules/auth/components/auth-showcase";
-import {
-  ArrowRightIcon,
-  LockIcon,
-  MailIcon,
-  PhoneIcon,
-  ProfileIcon,
-  ShieldIcon,
-  UserIcon,
-} from "../modules/auth/components/auth-icons";
 
 type RegisterFormState = {
   confirmPassword: string;
@@ -29,31 +15,6 @@ type RegisterFormState = {
 };
 
 type RegisterFormErrors = Partial<Record<keyof RegisterFormState, string>>;
-
-const helperNotes = [
-  {
-    title: "Tạo tài khoản mới",
-    description:
-      "Khai báo đầy đủ thông tin để hệ thống cấp quyền và quản lý liên hệ hỗ trợ.",
-  },
-  {
-    title: "Đăng nhập sau khi tạo",
-    description:
-      "Sau khi đăng ký thành công, bạn có thể quay lại trang đăng nhập để sử dụng hệ thống.",
-  },
-];
-
-const showcaseMetrics = [
-  { label: "Điểm hỗ trợ đang theo dõi", value: "18" },
-  { label: "Nhóm cứu hộ sẵn sàng", value: "12" },
-  { label: "Kênh tiếp nhận thông tin", value: "24/7" },
-];
-
-const showcaseHighlights = [
-  "Tạo tài khoản mới cho nhân sự vận hành và hỗ trợ hiện trường.",
-  "Lưu thông tin liên hệ để phối hợp nhanh khi có tình huống khẩn cấp.",
-  "Giữ cùng ngôn ngữ giao diện với trang đăng nhập để dễ làm quen.",
-];
 
 const initialFormState: RegisterFormState = {
   confirmPassword: "",
@@ -96,6 +57,7 @@ function validateForm(formState: RegisterFormState) {
 }
 
 function RegisterPage() {
+  const navigate = useNavigate();
   const [formState, setFormState] = useState(initialFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<RegisterFormErrors>({});
@@ -116,6 +78,16 @@ function RegisterPage() {
       ...current,
       [field]: undefined,
     }));
+    setErrorMessage("");
+  };
+
+  const handleClose = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/login");
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -161,96 +133,66 @@ function RegisterPage() {
   };
 
   return (
-    <AuthShell
-      showcase={
-        <AuthShowcase
-          badgeLabel="Flood Rescue"
-          description="Trang đăng ký được thiết kế cùng phong cách với đăng nhập để người dùng mới có thể tạo tài khoản nhanh, rõ ràng và không bị rối."
-          eyebrow="Đăng ký tài khoản vận hành"
-          highlights={showcaseHighlights}
-          metrics={showcaseMetrics}
-          title={
-            <>
-              Tạo tài khoản mới cho{" "}
-              <span className="text-gradient">hệ thống cứu hộ</span> và điều phối
-              hỗ trợ thiên tai.
-            </>
-          }
-        />
-      }
-    >
-      <SurfaceCard className="overflow-hidden" contentClassName="p-0">
-        <div className="h-1.5 w-full bg-gradient-to-r from-accent to-accent-secondary" />
-        <div className="space-y-7 px-6 py-6 sm:px-8 sm:py-8">
-          <div className="flex flex-col gap-5">
-            <div className="flex items-center justify-between gap-4">
-              <SectionLabel label="Đăng ký tài khoản" />
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/70 px-3 py-2 text-sm text-muted-foreground">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-secondary text-white">
-                  <ShieldIcon />
-                </span>
-                <span>Xác thực bảo mật</span>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-[2.5rem]">
-                Tạo tài khoản để bắt đầu sử dụng hệ thống.
-              </h2>
-              <p className="mt-3 max-w-lg text-base leading-7 text-muted-foreground">
-                Điền thông tin cơ bản để tạo tài khoản mới. Sau khi đăng ký
-                thành công, bạn có thể quay lại trang đăng nhập để truy cập hệ
-                thống.
-              </p>
-            </div>
+    <main className="min-h-screen bg-slate-100 px-4 py-6 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-3xl rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 sm:px-8">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold tracking-[-0.03em] text-slate-900">
+              Đăng ký tài khoản
+            </h1>
+            <p className="max-w-2xl text-sm leading-6 text-slate-500">
+              Điền các thông tin cần thiết để tạo tài khoản mới cho hệ thống cứu
+              hộ và điều phối hỗ trợ.
+            </p>
           </div>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <InputField
+          <button
+            aria-label="Đóng"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            onClick={handleClose}
+            type="button"
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        <div className="px-6 py-6 sm:px-8 sm:py-8">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="grid gap-6 md:grid-cols-2">
+              <SimpleInput
                 error={fieldErrors.fullName}
                 id="fullName"
-                label="Họ và tên"
-                leadingAdornment={<ProfileIcon />}
-                name="fullName"
+                label="Họ và tên *"
                 onChange={(event) => updateField("fullName", event.target.value)}
                 placeholder="Nhập họ và tên"
-                type="text"
                 value={formState.fullName}
               />
 
-              <InputField
+              <SimpleInput
                 error={fieldErrors.username}
                 id="username"
-                label="Tên đăng nhập"
-                leadingAdornment={<UserIcon />}
-                name="username"
+                label="Tên đăng nhập *"
                 onChange={(event) => updateField("username", event.target.value)}
                 placeholder="Tối thiểu 4 ký tự"
-                type="text"
                 value={formState.username}
               />
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2">
-              <InputField
+            <div className="grid gap-6 md:grid-cols-2">
+              <SimpleInput
                 error={fieldErrors.phone}
                 id="phone"
-                label="Số điện thoại"
-                leadingAdornment={<PhoneIcon />}
-                name="phone"
+                label="Số điện thoại *"
                 onChange={(event) => updateField("phone", event.target.value)}
                 placeholder="Nhập số điện thoại"
                 type="tel"
                 value={formState.phone}
               />
 
-              <InputField
+              <SimpleInput
                 error={fieldErrors.email}
                 id="email"
                 label="Email"
-                leadingAdornment={<MailIcon />}
-                name="email"
                 onChange={(event) => updateField("email", event.target.value)}
                 placeholder="Nhập email liên hệ"
                 type="email"
@@ -258,65 +200,43 @@ function RegisterPage() {
               />
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2">
-              <InputField
+            <div className="grid gap-6 md:grid-cols-2">
+              <PasswordField
                 error={fieldErrors.password}
                 id="password"
-                label="Mật khẩu"
-                leadingAdornment={<LockIcon />}
-                name="password"
+                label="Mật khẩu *"
                 onChange={(event) => updateField("password", event.target.value)}
+                onToggleVisibility={() => setShowPassword((current) => !current)}
                 placeholder="Ít nhất 6 ký tự"
-                type={showPassword ? "text" : "password"}
+                showPassword={showPassword}
                 value={formState.password}
-                action={
-                  <button
-                    className="rounded-full px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    onClick={() => setShowPassword((current) => !current)}
-                    type="button"
-                  >
-                    {showPassword ? "Ẩn" : "Hiện"}
-                  </button>
-                }
               />
 
-              <InputField
+              <PasswordField
                 error={fieldErrors.confirmPassword}
                 id="confirmPassword"
-                label="Xác nhận mật khẩu"
-                leadingAdornment={<LockIcon />}
-                name="confirmPassword"
+                label="Xác nhận mật khẩu *"
                 onChange={(event) =>
                   updateField("confirmPassword", event.target.value)
                 }
-                placeholder="Nhập lại mật khẩu"
-                type={showConfirmPassword ? "text" : "password"}
-                value={formState.confirmPassword}
-                action={
-                  <button
-                    className="rounded-full px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    onClick={() =>
-                      setShowConfirmPassword((current) => !current)
-                    }
-                    type="button"
-                  >
-                    {showConfirmPassword ? "Ẩn" : "Hiện"}
-                  </button>
+                onToggleVisibility={() =>
+                  setShowConfirmPassword((current) => !current)
                 }
+                placeholder="Nhập lại mật khẩu"
+                showPassword={showConfirmPassword}
+                value={formState.confirmPassword}
               />
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground">
-                Đã có tài khoản?{" "}
-                <Link
-                  className="font-medium text-accent transition-colors hover:text-accent-secondary"
-                  to="/login"
-                >
-                  Đăng nhập ngay
-                </Link>
-              </p>
-            </div>
+            <p className="text-sm text-slate-500">
+              Đã có tài khoản?{" "}
+              <Link
+                className="font-medium text-emerald-700 transition hover:text-emerald-800"
+                to="/login"
+              >
+                Đăng nhập
+              </Link>
+            </p>
 
             {errorMessage ? (
               <div
@@ -340,39 +260,119 @@ function RegisterPage() {
 
             <Button
               aria-busy={isSubmitting}
-              className="w-full"
+              className="w-full rounded-2xl"
               disabled={isSubmitting}
-              trailingIcon={<ArrowRightIcon />}
               type="submit"
             >
               {isSubmitting ? "Đang xử lý..." : "Đăng ký tài khoản"}
             </Button>
           </form>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            {helperNotes.map((item) => (
-              <SurfaceCard
-                key={item.title}
-                className="h-full"
-                contentClassName="p-4"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 h-2.5 w-2.5 rounded-full bg-accent" />
-                  <div>
-                    <p className="font-medium tracking-[-0.01em] text-foreground">
-                      {item.title}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              </SurfaceCard>
-            ))}
-          </div>
         </div>
-      </SurfaceCard>
-    </AuthShell>
+      </div>
+    </main>
+  );
+}
+
+type SimpleInputProps = {
+  error?: string;
+  id: string;
+  label: string;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  placeholder: string;
+  type?: string;
+  value: string;
+};
+
+function SimpleInput({
+  error,
+  id,
+  label,
+  onChange,
+  placeholder,
+  type = "text",
+  value,
+}: SimpleInputProps) {
+  return (
+    <div className="space-y-3">
+      <label className="block text-sm font-medium text-slate-900" htmlFor={id}>
+        {label}
+      </label>
+      <input
+        className={`h-14 w-full rounded-2xl border px-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 ${
+          error
+            ? "border-rose-300 focus:border-rose-400 focus:ring-rose-100"
+            : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
+        }`}
+        id={id}
+        onChange={onChange}
+        placeholder={placeholder}
+        type={type}
+        value={value}
+      />
+      {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+    </div>
+  );
+}
+
+type PasswordFieldProps = Omit<SimpleInputProps, "type"> & {
+  onToggleVisibility: () => void;
+  showPassword: boolean;
+};
+
+function PasswordField({
+  error,
+  id,
+  label,
+  onChange,
+  onToggleVisibility,
+  placeholder,
+  showPassword,
+  value,
+}: PasswordFieldProps) {
+  return (
+    <div className="space-y-3">
+      <label className="block text-sm font-medium text-slate-900" htmlFor={id}>
+        {label}
+      </label>
+      <div
+        className={`flex h-14 items-center rounded-2xl border px-4 transition focus-within:ring-4 ${
+          error
+            ? "border-rose-300 focus-within:border-rose-400 focus-within:ring-rose-100"
+            : "border-slate-200 focus-within:border-emerald-500 focus-within:ring-emerald-100"
+        }`}
+      >
+        <input
+          className="h-full w-full bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400"
+          id={id}
+          onChange={onChange}
+          placeholder={placeholder}
+          type={showPassword ? "text" : "password"}
+          value={value}
+        />
+        <button
+          className="rounded-xl px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          onClick={onToggleVisibility}
+          type="button"
+        >
+          {showPassword ? "Ẩn" : "Hiện"}
+        </button>
+      </div>
+      {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+    </div>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24">
+      <path
+        d="M6 6 18 18M18 6 6 18"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
   );
 }
 

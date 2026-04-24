@@ -1,50 +1,15 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../components/common/button";
-import SectionLabel from "../components/common/section-label";
-import SurfaceCard from "../components/common/surface-card";
-import InputField from "../components/form/input-field";
 import { getAuthErrorMessage } from "../modules/auth/auth.utils";
 import { login, persistAuthSession } from "../modules/auth/auth.service";
-import AuthShell from "../modules/auth/components/auth-shell";
-import AuthShowcase from "../modules/auth/components/auth-showcase";
-import {
-  ArrowRightIcon,
-  LockIcon,
-  ShieldIcon,
-  UserIcon,
-} from "../modules/auth/components/auth-icons";
 
 type LoginFormState = {
   password: string;
   rememberMe: boolean;
   username: string;
 };
-
-const helperNotes = [
-  {
-    title: "Đăng nhập an toàn",
-    description: "Thông tin được gửi trực tiếp đến hệ thống qua API bảo mật.",
-  },
-  {
-    title: "Lưu phiên làm việc",
-    description:
-      "Bạn có thể ghi nhớ phiên trên thiết bị này để thao tác nhanh hơn.",
-  },
-];
-
-const showcaseMetrics = [
-  { label: "Điểm hỗ trợ đang theo dõi", value: "18" },
-  { label: "Nhóm cứu hộ sẵn sàng", value: "12" },
-  { label: "Trạng thái hệ thống", value: "Ổn định" },
-];
-
-const showcaseHighlights = [
-  "Cập nhật nhanh thông tin mưa lũ và yêu cầu hỗ trợ.",
-  "Theo dõi tình hình điều phối cứu hộ trên một giao diện thống nhất.",
-  "Đảm bảo truy cập an toàn cho người trực hệ thống.",
-];
 
 const initialFormState: LoginFormState = {
   password: "",
@@ -53,6 +18,7 @@ const initialFormState: LoginFormState = {
 };
 
 function LoginPage() {
+  const navigate = useNavigate();
   const [formState, setFormState] = useState(initialFormState);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,6 +33,16 @@ function LoginPage() {
       ...current,
       [field]: value,
     }));
+    setErrorMessage("");
+  };
+
+  const handleClose = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/rescue-request");
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -110,121 +86,81 @@ function LoginPage() {
   };
 
   return (
-    <AuthShell
-      showcase={
-        <AuthShowcase
-          badgeLabel="Flood Rescue"
-          description="Giao diện được thiết kế gọn gàng, dễ nhìn và phù hợp cho môi trường vận hành thực tế, nơi thông tin cần rõ ràng và truy cập phải nhanh chóng."
-          eyebrow="Hệ thống hỗ trợ điều phối cứu hộ"
-          highlights={showcaseHighlights}
-          metrics={showcaseMetrics}
-          title={
-            <>
-              Đăng nhập hệ thống{" "}
-              <span className="text-gradient">cứu hộ lũ lụt</span> và quản lý
-              hỗ trợ thiên tai.
-            </>
-          }
-        />
-      }
-    >
-      <SurfaceCard className="overflow-hidden" contentClassName="p-0">
-        <div className="h-1.5 w-full bg-gradient-to-r from-accent to-accent-secondary" />
-        <div className="space-y-7 px-6 py-6 sm:px-8 sm:py-8">
-          <div className="flex flex-col gap-5">
-            <div className="flex items-center justify-between gap-4">
-              <SectionLabel label="Đăng nhập hệ thống" />
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/70 px-3 py-2 text-sm text-muted-foreground">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-secondary text-white">
-                  <ShieldIcon />
-                </span>
-                <span>Bảo mật JWT</span>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-[2.5rem]">
-                Đăng nhập để truy cập trung tâm điều phối cứu hộ.
-              </h2>
-              <p className="mt-3 max-w-lg text-base leading-7 text-muted-foreground">
-                Sử dụng tài khoản được cấp để tiếp nhận thông tin khẩn cấp, theo
-                dõi tình hình và cập nhật tiến độ xử lý cứu trợ.
-              </p>
-            </div>
+    <main className="min-h-screen bg-slate-100 px-4 py-6 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-2xl rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 sm:px-8">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold tracking-[-0.03em] text-slate-900">
+              Đăng nhập hệ thống
+            </h1>
+            <p className="max-w-xl text-sm leading-6 text-slate-500">
+              Sử dụng tài khoản được cấp để truy cập hệ thống điều phối cứu hộ và
+              quản lý hỗ trợ.
+            </p>
           </div>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <InputField
+          <button
+            aria-label="Đóng"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            onClick={handleClose}
+            type="button"
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        <div className="px-6 py-6 sm:px-8 sm:py-8">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <SimpleInput
               autoComplete="username"
               id="username"
-              label="Tên đăng nhập"
-              leadingAdornment={<UserIcon />}
-              name="username"
+              label="Tên đăng nhập *"
               onChange={(event) => updateField("username", event.target.value)}
               placeholder="Nhập tên đăng nhập"
-              type="text"
               value={formState.username}
             />
 
-            <InputField
+            <PasswordField
               autoComplete="current-password"
               id="password"
-              label="Mật khẩu"
-              leadingAdornment={<LockIcon />}
-              name="password"
+              label="Mật khẩu *"
               onChange={(event) => updateField("password", event.target.value)}
+              onToggleVisibility={() => setShowPassword((current) => !current)}
               placeholder="Nhập mật khẩu"
-              type={showPassword ? "text" : "password"}
+              showPassword={showPassword}
               value={formState.password}
-              action={
-                <button
-                  className="rounded-full px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  onClick={() => setShowPassword((current) => !current)}
-                  type="button"
-                >
-                  {showPassword ? "Ẩn" : "Hiện"}
-                </button>
-              }
             />
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <label className="inline-flex items-center gap-3 text-sm text-muted-foreground">
-                <span className="relative flex h-5 w-5 items-center justify-center">
+              <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-600">
+                <span className="relative flex h-5 w-5 shrink-0 items-center justify-center">
                   <input
                     checked={formState.rememberMe}
-                    className="peer absolute inset-0 cursor-pointer opacity-0"
+                    className="peer absolute inset-0 opacity-0"
                     onChange={(event) =>
                       updateField("rememberMe", event.target.checked)
                     }
                     type="checkbox"
                   />
-                  <span className="h-5 w-5 rounded-md border border-border bg-background transition peer-checked:border-accent peer-checked:bg-gradient-to-br peer-checked:from-accent peer-checked:to-accent-secondary" />
-                  <svg
-                    aria-hidden="true"
-                    className="pointer-events-none absolute h-3 w-3 text-white opacity-0 transition peer-checked:opacity-100"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="m5 12 4.5 4.5L19 7"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2.2"
-                    />
-                  </svg>
+                  <span className="h-5 w-5 rounded-md border border-slate-300 bg-white transition peer-checked:border-emerald-500 peer-checked:bg-emerald-500" />
+                  {formState.rememberMe ? (
+                    <span className="pointer-events-none absolute text-white">
+                      <CheckIcon />
+                    </span>
+                  ) : null}
                 </span>
-                <span className="font-medium text-foreground">
-                  Nhớ phiên đăng nhập trên máy này
-                </span>
+                Nhớ phiên đăng nhập trên máy này
               </label>
 
-              <Link
-                className="text-sm font-medium text-accent transition-colors hover:text-accent-secondary"
-                to="/register"
-              >
-                Chưa có tài khoản? Đăng ký
-              </Link>
+              <p className="text-sm text-slate-500">
+                Chưa có tài khoản?{" "}
+                <Link
+                  className="font-medium text-emerald-700 transition hover:text-emerald-800"
+                  to="/register"
+                >
+                  Đăng ký
+                </Link>
+              </p>
             </div>
 
             {errorMessage ? (
@@ -249,39 +185,123 @@ function LoginPage() {
 
             <Button
               aria-busy={isSubmitting}
-              className="w-full"
+              className="w-full rounded-2xl"
               disabled={isSubmitting}
-              trailingIcon={<ArrowRightIcon />}
               type="submit"
             >
               {isSubmitting ? "Đang xử lý..." : "Đăng nhập"}
             </Button>
           </form>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            {helperNotes.map((item) => (
-              <SurfaceCard
-                key={item.title}
-                className="h-full"
-                contentClassName="p-4"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 h-2.5 w-2.5 rounded-full bg-accent" />
-                  <div>
-                    <p className="font-medium tracking-[-0.01em] text-foreground">
-                      {item.title}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              </SurfaceCard>
-            ))}
-          </div>
         </div>
-      </SurfaceCard>
-    </AuthShell>
+      </div>
+    </main>
+  );
+}
+
+type SimpleInputProps = {
+  autoComplete?: string;
+  id: string;
+  label: string;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  placeholder: string;
+  type?: string;
+  value: string;
+};
+
+function SimpleInput({
+  autoComplete,
+  id,
+  label,
+  onChange,
+  placeholder,
+  type = "text",
+  value,
+}: SimpleInputProps) {
+  return (
+    <div className="space-y-3">
+      <label className="block text-sm font-medium text-slate-900" htmlFor={id}>
+        {label}
+      </label>
+      <input
+        autoComplete={autoComplete}
+        className="h-14 w-full rounded-2xl border border-slate-200 px-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+        id={id}
+        onChange={onChange}
+        placeholder={placeholder}
+        type={type}
+        value={value}
+      />
+    </div>
+  );
+}
+
+type PasswordFieldProps = Omit<SimpleInputProps, "type"> & {
+  onToggleVisibility: () => void;
+  showPassword: boolean;
+};
+
+function PasswordField({
+  autoComplete,
+  id,
+  label,
+  onChange,
+  onToggleVisibility,
+  placeholder,
+  showPassword,
+  value,
+}: PasswordFieldProps) {
+  return (
+    <div className="space-y-3">
+      <label className="block text-sm font-medium text-slate-900" htmlFor={id}>
+        {label}
+      </label>
+      <div className="flex h-14 items-center rounded-2xl border border-slate-200 px-4 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-100">
+        <input
+          autoComplete={autoComplete}
+          className="h-full w-full bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400"
+          id={id}
+          onChange={onChange}
+          placeholder={placeholder}
+          type={showPassword ? "text" : "password"}
+          value={value}
+        />
+        <button
+          className="rounded-xl px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          onClick={onToggleVisibility}
+          type="button"
+        >
+          {showPassword ? "Ẩn" : "Hiện"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+      <path
+        d="m5 12 4.5 4.5L19 7"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2.2"
+      />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24">
+      <path
+        d="M6 6 18 18M18 6 6 18"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
   );
 }
 
