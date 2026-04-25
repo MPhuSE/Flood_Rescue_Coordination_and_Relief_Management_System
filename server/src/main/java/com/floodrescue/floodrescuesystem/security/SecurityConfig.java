@@ -25,8 +25,8 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                          CustomUserDetailsService customUserDetailsService,
-                          UserRepository userRepository) {
+            CustomUserDetailsService customUserDetailsService,
+            UserRepository userRepository) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.customUserDetailsService = customUserDetailsService;
     }
@@ -39,8 +39,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/rescue-requests").permitAll()
+                        .requestMatchers("/api/assignments/**").permitAll()
+                        .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
