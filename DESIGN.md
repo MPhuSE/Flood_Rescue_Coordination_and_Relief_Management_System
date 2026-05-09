@@ -1,92 +1,157 @@
-# Cẩm nang Thiết kế Giao diện (UI/UX Design System)
-*Hệ thống: Phần mềm điều phối cứu hộ và quản lý cứu trợ lũ lụt*
+# Flood Rescue Coordination and Relief Management System
+## System Architecture & Design Documentation
 
-Tài liệu này định nghĩa các tiêu chuẩn thiết kế (Design System) cho toàn bộ giao diện của dự án, nhằm đảm bảo tính nhất quán, chuyên nghiệp và tối ưu trải nghiệm người dùng, đặc biệt trong các tình huống khẩn cấp (cứu hộ, cứu trợ).
-
----
-
-## 1. Triết lý Thiết kế (Design Principles)
-*   **Tối giản và Sạch sẽ (Clean & Minimalist):** Giảm thiểu yếu tố thừa, tập trung hiển thị dữ liệu quan trọng nhất (vị trí, mức độ khẩn cấp).
-*   **Rõ ràng & Tương phản cao (High Contrast):** Đảm bảo khả năng đọc tốt ngoài trời (cho đội cứu hộ) và trong môi trường ánh sáng yếu.
-*   **Phản hồi theo thời gian thực (Real-time Focus):** Mọi thay đổi trạng thái (có thông báo mới, vị trí thay đổi) phải được thể hiện ngay lập tức qua hiệu ứng mượt mà.
-*   **Đa nền tảng (Responsive & Mobile-first):**
-    *   *Người dân & Đội cứu hộ:* Ưu tiên giao diện trên điện thoại di động (Mobile). Nút bấm lớn, thao tác vuốt chạm dễ dàng.
-    *   *Điều phối viên, Quản lý & Admin:* Ưu tiên giao diện Desktop với Dashboard rộng rãi để bao quát thông tin và bản đồ (Map).
+Tài liệu này mô tả chi tiết về cấu trúc dữ liệu (Class Diagram) và luồng hoạt động chính (Flowchart) của Hệ thống Điều phối Cứu hộ và Quản lý Cứu trợ Lũ lụt.
 
 ---
 
-## 2. Bảng màu (Color Palette)
-Hệ thống sử dụng bảng màu phản ánh sự chuyên nghiệp, tin cậy và phân cấp mức độ khẩn cấp rõ ràng.
+### 1. Sơ đồ mô hình lớp dữ liệu (Class Diagram)
+Sơ đồ dưới đây thể hiện các thực thể chính trong hệ thống và mối quan hệ giữa chúng, bao gồm Quản lý người dùng, Đội cứu hộ, Yêu cầu cứu hộ, Hàng cứu trợ và Điểm an toàn.
 
-### Màu chủ đạo (Primary Colors)
-*   **Primary (Xanh dương đậm - `#1d4ed8` / Blue 700):** Dùng cho các thành phần chính (Header, Nút bấm chính, Liên kết). Tạo cảm giác an tâm, chuyên nghiệp.
-*   **Secondary (Cam cứu hộ - `#ea580c` / Orange 600):** Dùng làm điểm nhấn cho các hành động cứu trợ, các khu vực cảnh báo trung bình.
+```mermaid
+classDiagram
+    class User {
+        +Long id
+        +String username
+        +String passwordHash
+        +String fullName
+        +String email
+        +String phone
+        +String status
+        +LocalDateTime createdAt
+    }
+    
+    class Role {
+        +Long id
+        +String name
+        +String description
+    }
+    
+    class RescueTeam {
+        +Long teamId
+        +String teamName
+        +Integer memberCount
+        +String contactPhone
+        +String status
+        +String currentLocation
+    }
+    
+    class RescueVehicle {
+        +Long vehicleId
+        +String name
+        +String type
+        +String licensePlate
+        +Integer capacity
+        +String status
+    }
+    
+    class RescueRequest {
+        +Long id
+        +String description
+        +String location
+        +Double latitude
+        +Double longitude
+        +String urgencyLevel
+        +String status
+        +LocalDateTime createdTime
+    }
+    
+    class ReliefItem {
+        +Long id
+        +String name
+        +String category
+        +String unit
+        +Integer quantityInStock
+        +Integer minimumStockLevel
+    }
+    
+    class ReliefDistribution {
+        +Long id
+        +Integer quantityDistributed
+        +LocalDateTime distributionDate
+    }
+    
+    class Shelter {
+        +Long id
+        +String name
+        +String location
+        +Integer capacity
+        +Integer currentOccupancy
+        +String status
+    }
+    
+    class FloodAlert {
+        +Long id
+        +String title
+        +String severity
+        +String locationArea
+        +LocalDateTime startTime
+    }
 
-### Màu hệ thống & Khẩn cấp (Semantic & Urgency Colors)
-Được sử dụng cho các Label, Badge, và Marker trên bản đồ để hiển thị trạng thái yêu cầu:
-*   **🔴 Critical (Đỏ - `#dc2626` / Red 600):** Nguy hiểm đến tính mạng, cần cứu hộ lập tức.
-*   **🟠 High (Cam - `#f97316` / Orange 500):** Rất khẩn cấp, mức độ ưu tiên cao.
-*   **🟡 Medium (Vàng - `#eab308` / Yellow 500):** Cần hỗ trợ (thiếu lương thực, nước uống).
-*   **🟢 Low / Success (Xanh lá - `#16a34a` / Green 600):** An toàn, đã cứu hộ thành công, hoặc thông báo hệ thống bình thường.
-
-### Màu Nền & Văn bản (Neutrals)
-*   **Background (Nền):** `#f8fafc` (Slate 50) cho nền ứng dụng; `#ffffff` (White) cho các Thẻ (Card) và Bảng biểu (Panel).
-*   **Text (Văn bản):** `#0f172a` (Slate 900) cho Tiêu đề; `#475569` (Slate 600) cho đoạn văn.
+    User "n" --> "1" Role : Has
+    RescueRequest "n" --> "1" User : Created by (Citizen)
+    RescueRequest "n" --> "1" RescueTeam : Assigned to
+    RescueVehicle "n" --> "1" RescueTeam : Used by
+    ReliefDistribution "n" --> "1" RescueRequest : Distributed for
+    ReliefDistribution "n" --> "1" ReliefItem : Distributes
+    FloodAlert "n" --> "1" User : Created by (Admin/Manager)
+```
 
 ---
 
-## 3. Kiểu chữ (Typography)
-Sử dụng các font chữ không chân (San-serif) hiện đại, hỗ trợ Tiếng Việt tốt:
-*   **Font Family:** `Inter`, `Roboto` hoặc `System-UI`.
-*   **Tiêu đề (Headings):** Font weight `Bold` (700) hoặc `Semi-bold` (600). Kích thước lớn, rõ ràng.
-*   **Nội dung (Body):** Font weight `Regular` (400), size `16px` chuẩn để đảm bảo khả năng đọc.
-*   **Chú thích (Caption/Eyebrow):** In hoa, kích thước nhỏ `12px` - `14px`, Tracking rộng, thường màu xám nhạt để phân biệt không gian.
+### 2. Sơ đồ luồng nghiệp vụ cốt lõi (Flowchart)
+Sơ đồ dưới đây mô tả luồng nghiệp vụ quan trọng nhất của hệ thống: **Tiếp nhận và xử lý yêu cầu cứu hộ khẩn cấp.**
+
+```mermaid
+flowchart TD
+    %% Định nghĩa các Actor
+    Citizen([Người dân / Citizen])
+    Coord([Điều phối viên / Coordinator])
+    Team([Đội cứu hộ / Rescue Team])
+    
+    %% Luồng tạo yêu cầu
+    Citizen -->|Tạo Rescue Request qua Web| Sys_Receive(Hệ thống tiếp nhận yêu cầu)
+    Sys_Receive -->|Lưu DB trạng thái PENDING| DB_Req[(Database)]
+    Sys_Receive -->|Bắn thông báo| Coord
+    
+    %% Luồng điều phối
+    Coord -->|Đăng nhập & Xem danh sách| Sys_Dashboard(Dashboard Yêu cầu Cứu hộ)
+    Sys_Dashboard -->|Phân tích mức độ khẩn cấp| Coord_Action{Chọn đội cứu hộ?}
+    
+    Coord_Action -->|Phân công| Assign(Assign to Rescue Team)
+    Assign -->|Cập nhật trạng thái ASSIGNED| DB_Req
+    Assign -->|Gửi Notification| Team
+    
+    %% Luồng thực thi của đội cứu hộ
+    Team -->|Xác nhận nhận việc| Update_InProg(Cập nhật IN_PROGRESS)
+    Update_InProg -->|Di chuyển đến vị trí| Exec_Rescue[Thực hiện cứu hộ / Cứu trợ]
+    
+    Exec_Rescue -->|Cần hàng cứu trợ?| Check_Relief{Phân phát hàng?}
+    Check_Relief -->|Có| Distribute(Tạo Relief Distribution)
+    Distribute -->|Trừ tồn kho| DB_Inventory[(Kho hàng)]
+    Check_Relief -->|Không| Complete_Action
+    
+    Distribute --> Complete_Action
+    
+    %% Luồng kết thúc
+    Complete_Action(Hoàn thành nhiệm vụ) -->|Cập nhật trạng thái COMPLETED| DB_Req
+    Complete_Action -->|Thông báo cho người dân| End_Citizen([Người dân an toàn])
+    
+    %% Style
+    style Citizen fill:#f9f,stroke:#333,stroke-width:2px
+    style Coord fill:#bbf,stroke:#333,stroke-width:2px
+    style Team fill:#bfb,stroke:#333,stroke-width:2px
+    style DB_Req fill:#fbb,stroke:#333,stroke-width:2px
+```
 
 ---
 
-## 4. Cấu trúc Giao diện theo Role (Layout & Navigation)
+### 3. Phân quyền Hệ thống (Role-Based Access Control)
 
-### 4.1. Citizen (Người dân) & Rescue Team (Đội cứu hộ)
-*   **Bố cục (Layout):** App-like (Giống ứng dụng di động).
-*   **Thanh điều hướng (Navigation):** Bottom Navigation Bar (Thanh điều hướng dưới cùng) trên Mobile.
-*   **Màn hình chính:** 
-    *   *Người dân:* Form tạo yêu cầu lớn, bản đồ định vị GPS hiện tại, danh sách yêu cầu đã gửi dưới dạng Thẻ (Card).
-    *   *Đội cứu hộ:* Bản đồ toàn màn hình hiển thị vị trí các nạn nhân, có bảng trượt (Swipe-up bottom sheet) để xem chi tiết danh sách nhiệm vụ.
-
-### 4.2. Coordinator (Điều phối viên) & Manager (Quản lý)
-*   **Bố cục (Layout):** Dashboard chuyên nghiệp.
-*   **Thanh điều hướng (Navigation):** Sidebar Navigation (Cột điều hướng bên trái) có thể thu gọn.
-*   **Màn hình chính:**
-    *   *Điều phối viên:* Chia đôi màn hình (Split-screen). Một nửa là Bản đồ thời gian thực (Real-time Map), nửa còn lại là Bảng/Lưới danh sách các yêu cầu đang chờ xử lý.
-    *   *Quản lý:* Các bảng biểu (Data Table), Biểu đồ thống kê (Chart) nguồn lực và thanh công cụ tìm kiếm/lọc nâng cao.
-
----
-
-## 5. Thiết kế Thành phần (Key UI Components)
-
-### Bản đồ thời gian thực (Real-time Map Integration)
-*   Tích hợp bản đồ (Leaflet / Mapbox) kết nối với PostGIS.
-*   Thiết kế Marker (ghim vị trí) theo màu sắc khẩn cấp (Đỏ, Cam, Vàng).
-*   *UI Effect:* Các marker khẩn cấp cấp độ "Critical" có hiệu ứng "Pulse" (vòng tròn tỏa ra liên tục) để thu hút sự chú ý.
-*   Sử dụng phong cách Glassmorphism (Kính mờ) cho các bảng thông tin trôi (Floating panel) xếp đè lên bản đồ để không bị mất tầm nhìn tổng thể.
-
-### Bảng dữ liệu (Data Tables)
-*   Dùng để hiển thị danh sách dài (cho Admin, Manager).
-*   Tính năng bắt buộc: Phân trang (Pagination), Cố định cột tiêu đề (Sticky Header), và Thanh tìm kiếm (Search Bar) tích hợp ngay phía trên.
-*   Các hàng (Row) có hiệu ứng Hover đổi màu nhạt để dễ theo dõi.
-
-### Trạng thái (Status Badges)
-*   Badge luôn có màu nền nhạt (Opacity 10-20%) và chữ màu đậm (Opacity 100%) của nhóm màu Semantic.
-*   Ví dụ: Badge `Chờ xử lý` (Nền cam nhạt, chữ cam đậm), `Đã hoàn thành` (Nền xanh nhạt, chữ xanh đậm).
-
-### Thông báo (Notifications/Toasts)
-*   Sử dụng Spring WebSocket để bắn thông báo.
-*   Hiển thị dạng Toast Messages xuất hiện góc trên bên phải màn hình (Desktop) hoặc phía trên cùng (Mobile).
-*   Có thanh tiến trình (Progress bar) tự động biến mất sau 3-5 giây (ngoại trừ thông báo báo động khẩn cấp cần người dùng tự bấm tắt).
-
----
-
-## 6. Hiệu ứng & Tương tác (Micro-interactions)
-*   **Skeleton Loading:** Thay vì dùng Spinner xoay vòng đơn điệu, khi tải dữ liệu trang sẽ hiển thị các khối xám nhấp nháy mô phỏng nội dung sắp xuất hiện, giúp người dùng cảm thấy ứng dụng tải nhanh hơn.
-*   **Hover & Active States:** Nút bấm khi di chuột vào (Hover) sẽ sáng hoặc tối hơn 1 tone, khi bấm (Active) sẽ có hiệu ứng thu nhỏ nhẹ (Scale 0.95) tạo cảm giác nút nhấn vật lý.
-*   **Chuyển trang (Page Transitions):** Hiệu ứng Fade-in nhẹ nhàng khi điều hướng giữa các trang (Modules).
+| Vai trò (Role) | Chức năng chính được phép |
+| :--- | :--- |
+| **ADMIN** | Quản lý toàn bộ hệ thống, quản lý tài khoản người dùng, xem thống kê tổng hợp. |
+| **COORDINATOR** | Xem tất cả yêu cầu cứu hộ, điều phối Đội cứu hộ (Rescue Team) đi làm nhiệm vụ, thay đổi trạng thái yêu cầu. |
+| **MANAGER** | Quản lý kho hàng cứu trợ (Relief Items), quản lý phương tiện cứu hộ (Vehicles) và Điểm an toàn (Shelters), phát Cảnh báo lũ. |
+| **RESCUER** | (Đội cứu hộ) Xem các nhiệm vụ được phân công, cập nhật trạng thái nhiệm vụ (Đang đi, Đã xong), cập nhật phát hàng cứu trợ. |
+| **CITIZEN** | (Người dân) Gửi yêu cầu cứu hộ khẩn cấp, xem trạng thái yêu cầu của mình, nhận cảnh báo lũ lụt và tìm điểm an toàn. |

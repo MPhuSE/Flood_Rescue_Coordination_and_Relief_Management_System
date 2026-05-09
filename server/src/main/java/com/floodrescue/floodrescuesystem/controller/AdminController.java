@@ -17,6 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin")
 @Tag(name = "Admin", description = "Quản trị hệ thống - Quản lý người dùng, phân quyền, thống kê")
+@org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final AdminService adminService;
