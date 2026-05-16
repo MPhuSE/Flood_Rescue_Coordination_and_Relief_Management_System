@@ -14,6 +14,7 @@ public class RescueRequestResponse {
     private Double latitude;
     private Double longitude;
     private String image;
+    private Integer numberOfPeople;
     private UrgencyLevel urgencyLevel;
     private RequestStatus status;
     private LocalDateTime createdTime;
@@ -105,6 +106,14 @@ public class RescueRequestResponse {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public Integer getNumberOfPeople() {
+        return numberOfPeople;
+    }
+
+    public void setNumberOfPeople(Integer numberOfPeople) {
+        this.numberOfPeople = numberOfPeople;
     }
 
     public UrgencyLevel getUrgencyLevel() {

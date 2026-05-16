@@ -2,6 +2,7 @@ import { type ReactElement, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuthStore } from "./hooks/useAuthStore";
 import { userActions } from "./store/userStore";
+import { useUserStore } from "./hooks/useUserStore";
 
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
@@ -32,10 +33,29 @@ function ProtectedRoute({ children }: { children: ReactElement }) {
   return children;
 }
 
-function DashboardRoute({ children }: { children: ReactElement }) {
+function RoleRoute({ children, allowedRoles }: { children: ReactElement; allowedRoles?: string[] }) {
+  const { profile, status } = useUserStore((state) => ({ profile: state.profile, status: state.status }));
+  
+  if (status === "loading" || status === "idle") {
+    return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
+  }
+  
+  if (!profile) {
+    return <div className="flex flex-col items-center justify-center h-screen"><p className="text-error mb-4">Lỗi tải thông tin tài khoản hoặc mất kết nối máy chủ.</p><button onClick={() => window.location.reload()} className="btn-primary">Tải lại trang</button></div>;
+  }
+
+  if (allowedRoles && (!profile.role || !allowedRoles.includes(profile.role))) {
+    return <Navigate replace to="/map" />; // Default fallback for unauthorized
+  }
+  return children;
+}
+
+function DashboardRoute({ children, allowedRoles }: { children: ReactElement; allowedRoles?: string[] }) {
   return (
     <ProtectedRoute>
-      <DashboardLayout>{children}</DashboardLayout>
+      <RoleRoute allowedRoles={allowedRoles}>
+        <DashboardLayout>{children}</DashboardLayout>
+      </RoleRoute>
     </ProtectedRoute>
   );
 }
@@ -54,16 +74,16 @@ export default function App() {
       <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
       <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
 
-      <Route path="/dashboard" element={<DashboardRoute><DashboardPage /></DashboardRoute>} />
+      <Route path="/dashboard" element={<DashboardRoute allowedRoles={["ADMIN", "MANAGER", "COORDINATOR"]}><DashboardPage /></DashboardRoute>} />
       <Route path="/map" element={<DashboardRoute><MapPage /></DashboardRoute>} />
-      <Route path="/rescue-requests" element={<DashboardRoute><RescueRequestsPage /></DashboardRoute>} />
-      <Route path="/teams" element={<DashboardRoute><TeamsPage /></DashboardRoute>} />
-      <Route path="/vehicles" element={<DashboardRoute><VehiclesPage /></DashboardRoute>} />
-      <Route path="/relief" element={<DashboardRoute><ReliefPage /></DashboardRoute>} />
-      <Route path="/shelters" element={<DashboardRoute><SheltersPage /></DashboardRoute>} />
-      <Route path="/alerts" element={<DashboardRoute><AlertsPage /></DashboardRoute>} />
+      <Route path="/rescue-requests" element={<DashboardRoute allowedRoles={["CITIZEN", "COORDINATOR", "RESCUER", "ADMIN"]}><RescueRequestsPage /></DashboardRoute>} />
+      <Route path="/teams" element={<DashboardRoute allowedRoles={["ADMIN", "COORDINATOR"]}><TeamsPage /></DashboardRoute>} />
+      <Route path="/vehicles" element={<DashboardRoute allowedRoles={["ADMIN", "MANAGER", "COORDINATOR"]}><VehiclesPage /></DashboardRoute>} />
+      <Route path="/relief" element={<DashboardRoute allowedRoles={["ADMIN", "MANAGER"]}><ReliefPage /></DashboardRoute>} />
+      <Route path="/shelters" element={<DashboardRoute allowedRoles={["CITIZEN", "ADMIN", "MANAGER"]}><SheltersPage /></DashboardRoute>} />
+      <Route path="/alerts" element={<DashboardRoute allowedRoles={["CITIZEN", "ADMIN", "MANAGER"]}><AlertsPage /></DashboardRoute>} />
       <Route path="/notifications" element={<DashboardRoute><NotificationsPage /></DashboardRoute>} />
-      <Route path="/admin/users" element={<DashboardRoute><AdminUsersPage /></DashboardRoute>} />
+      <Route path="/admin/users" element={<DashboardRoute allowedRoles={["ADMIN"]}><AdminUsersPage /></DashboardRoute>} />
       <Route path="/profile" element={<DashboardRoute><ProfilePage /></DashboardRoute>} />
 
       <Route path="*" element={<Navigate replace to={isAuthenticated ? "/dashboard" : "/login"} />} />

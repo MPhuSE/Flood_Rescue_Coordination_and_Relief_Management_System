@@ -99,7 +99,21 @@ export function VehiclesPage() {
                     ) : <span className="text-slate italic">Chưa gán đội</span>}
                   </td>
                   <td className="px-4 py-3 text-xs">{v.capacity} người</td>
-                  <td className="px-4 py-3"><span className={statusBadge[v.status] || "badge-soft-purple"}>{v.status}</span></td>
+                  <td className="px-4 py-3">
+                    <select className={`text-xs border border-hairline rounded px-1 py-0.5 bg-white outline-none focus:border-primary font-semibold ${statusBadge[v.status] || "badge-soft-purple"}`}
+                      value={v.status}
+                      onChange={async (e) => {
+                        try {
+                           await vehicleApi.update(v.vehicleId, { ...v, status: e.target.value });
+                           load();
+                        } catch { alert("Cập nhật trạng thái thất bại"); }
+                      }}>
+                      <option value="AVAILABLE" className="text-ink bg-white">Sẵn sàng</option>
+                      <option value="IN_USE" className="text-ink bg-white">Đang hoạt động</option>
+                      <option value="MAINTENANCE" className="text-ink bg-white">Đang bảo trì</option>
+                      <option value="OUT_OF_SERVICE" className="text-ink bg-white">Hỏng/Ngừng HĐ</option>
+                    </select>
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <select 
                       className="text-xs border border-hairline rounded px-1 py-0.5 bg-white outline-none focus:border-primary"

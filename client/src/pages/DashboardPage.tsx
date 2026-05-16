@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { LifeBuoy, Users, Truck, Package, Shield, AlertTriangle, TrendingUp, Activity } from "lucide-react";
-import { adminApi, rescueApi, alertApi } from "../services/apiService";
+import { LifeBuoy, Users, Truck, Package, Shield, AlertTriangle, TrendingUp, Activity, HeartHandshake, CheckCircle, Zap } from "lucide-react";
+import { adminApi, rescueApi, alertApi, reliefApi } from "../services/apiService";
 import { useUserStore } from "../hooks/useUserStore";
-import type { DashboardStats, RescueRequest, FloodAlert } from "../types/rescue";
+import type { DashboardStats, RescueRequest, FloodAlert, ReliefDistribution } from "../types/rescue";
 
 const statCards = [
   { key: "totalRescueRequests", label: "Yêu cầu cứu hộ", icon: <LifeBuoy size={20} />, color: "bg-tint-lavender text-primary" },
@@ -34,11 +34,40 @@ export function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentRequests, setRecentRequests] = useState<RescueRequest[]>([]);
   const [activeAlerts, setActiveAlerts] = useState<FloodAlert[]>([]);
-  const isAdmin = profile?.role === "ADMIN";
+  const isAdmin = profile?.role === "ADMIN" || profile?.role === "COORDINATOR";
+
+  // Analytics State
+  const [totalSaved, setTotalSaved] = useState(0);
+  const [totalDistributed, setTotalDistributed] = useState(0);
+  const [avgResponseTime, setAvgResponseTime] = useState("0h");
 
   useEffect(() => {
-    if (isAdmin) adminApi.getDashboard().then(setStats).catch(() => {});
-    rescueApi.getAll().then(r => setRecentRequests(r?.slice(0, 5) || [])).catch(() => {});
+    if (isAdmin) {
+      adminApi.getDashboard().then(setStats).catch(() => {});
+      reliefApi.getDistributions().then(d => {
+         const total = d?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+         setTotalDistributed(total);
+      }).catch(() => {});
+    }
+    rescueApi.getAll().then(r => {
+      setRecentRequests(r?.slice(0, 5) || []);
+      const completed = r?.filter(req => req.status === "COMPLETED") || [];
+      const saved = completed.reduce((sum, req) => sum + (req.numberOfPeople || 1), 0);
+      setTotalSaved(saved);
+      
+      let totalHours = 0;
+      let validCount = 0;
+      completed.forEach(req => {
+        if (req.createdTime && req.updatedTime) {
+           const cTime = new Date(req.createdTime).getTime();
+           const uTime = new Date(req.updatedTime).getTime();
+           const hours = (uTime - cTime) / (1000 * 60 * 60);
+           if (hours > 0 && hours < 24*30) { totalHours += hours; validCount++; } // Avoid negative or crazy values
+        }
+      });
+      if (validCount > 0) setAvgResponseTime((totalHours / validCount).toFixed(1) + "h");
+      else setAvgResponseTime("< 1h");
+    }).catch(() => {});
     alertApi.getAll().then(a => setActiveAlerts(a?.slice(0, 3) || [])).catch(() => {});
   }, [isAdmin]);
 
@@ -74,11 +103,39 @@ export function DashboardPage() {
         </div>
       </div>
 
+      {/* FR-5.2 Analytics Advanced Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="card p-6 bg-gradient-to-br from-brand-green/20 to-brand-green/5 border-none shadow-mockup relative overflow-hidden">
+          <HeartHandshake className="absolute right-[-20px] bottom-[-20px] text-brand-green/20" size={120} />
+          <h3 className="text-sm font-semibold text-brand-green mb-1 uppercase tracking-wider">Tổng số người đã cứu</h3>
+          <p className="text-4xl font-bold text-ink mt-2">{totalSaved} <span className="text-base font-medium text-slate">người</span></p>
+          <div className="mt-4 flex items-center gap-2 text-xs font-medium text-brand-green bg-white/50 w-fit px-2 py-1 rounded-md">
+            <CheckCircle size={14} /> An toàn
+          </div>
+        </div>
+        <div className="card p-6 bg-gradient-to-br from-brand-orange-deep/20 to-brand-orange-deep/5 border-none shadow-mockup relative overflow-hidden">
+          <Package className="absolute right-[-20px] bottom-[-20px] text-brand-orange-deep/20" size={120} />
+          <h3 className="text-sm font-semibold text-brand-orange-deep mb-1 uppercase tracking-wider">Nhu yếu phẩm đã phát</h3>
+          <p className="text-4xl font-bold text-ink mt-2">{totalDistributed} <span className="text-base font-medium text-slate">đơn vị</span></p>
+          <div className="mt-4 flex items-center gap-2 text-xs font-medium text-brand-orange-deep bg-white/50 w-fit px-2 py-1 rounded-md">
+            <TrendingUp size={14} /> Cứu trợ đến tay dân
+          </div>
+        </div>
+        <div className="card p-6 bg-gradient-to-br from-primary/20 to-primary/5 border-none shadow-mockup relative overflow-hidden">
+          <Zap className="absolute right-[-20px] bottom-[-20px] text-primary/20" size={120} />
+          <h3 className="text-sm font-semibold text-primary mb-1 uppercase tracking-wider">Hiệu suất phản ứng TB</h3>
+          <p className="text-4xl font-bold text-ink mt-2">{avgResponseTime}</p>
+          <div className="mt-4 flex items-center gap-2 text-xs font-medium text-primary bg-white/50 w-fit px-2 py-1 rounded-md">
+            <Activity size={14} /> Thời gian từ SOS tới lúc Cứu xong
+          </div>
+        </div>
+      </div>
+
       {/* Stat Cards */}
       {isAdmin && stats && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {statCards.map(c => (
-            <div key={c.key} className="card p-4 hover:shadow-mockup transition-shadow duration-200">
+            <div key={c.key} className="card p-4 hover:shadow-mockup transition-shadow duration-200 bg-white">
               <div className={`w-10 h-10 rounded-lg ${c.color} flex items-center justify-center mb-3`}>
                 {c.icon}
               </div>

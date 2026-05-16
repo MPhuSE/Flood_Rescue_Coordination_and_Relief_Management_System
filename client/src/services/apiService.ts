@@ -17,8 +17,10 @@ export const rescueApi = {
   create: (d: CreateRescueRequest) => http.post<ApiResponse<RescueRequest>>("/rescue-requests", d).then(r => r.data.data),
   update: (id: number, d: CreateRescueRequest) => http.put<ApiResponse<RescueRequest>>(`/rescue-requests/${id}`, d).then(r => r.data.data),
   updateStatus: (id: number, status: string) => http.patch<ApiResponse<RescueRequest>>(`/rescue-requests/${id}/status`, { status }).then(r => r.data.data),
+  updateUrgency: (id: number, urgency: string) => http.patch<ApiResponse<RescueRequest>>(`/rescue-requests/${id}/urgency`, { status: urgency }).then(r => r.data.data),
   assignTeam: (id: number, teamId: number) => http.patch<ApiResponse<RescueRequest>>(`/rescue-requests/${id}/assign`, { teamId }).then(r => r.data.data),
   confirmRescued: (id: number) => http.patch<ApiResponse<RescueRequest>>(`/rescue-requests/${id}/confirm-rescued`).then(r => r.data.data),
+  updateLocation: (id: number, location: {latitude: number, longitude: number}) => http.patch<ApiResponse<RescueRequest>>(`/rescue-requests/${id}/location`, location).then(r => r.data.data),
   delete: (id: number) => http.delete<ApiResponse<void>>(`/rescue-requests/${id}`),
 };
 
@@ -28,6 +30,7 @@ export const teamApi = {
   getById: (id: number) => http.get<ApiResponse<RescueTeam>>(`/rescue-teams/${id}`).then(r => r.data.data),
   create: (d: Partial<RescueTeam>) => http.post<ApiResponse<RescueTeam>>("/rescue-teams", d).then(r => r.data.data),
   update: (id: number, d: Partial<RescueTeam>) => http.put<ApiResponse<RescueTeam>>(`/rescue-teams/${id}`, d).then(r => r.data.data),
+  updateLocation: (id: number, location: {latitude: number, longitude: number}) => http.patch<ApiResponse<RescueTeam>>(`/rescue-teams/${id}/location`, location).then(r => r.data.data),
   delete: (id: number) => http.delete<ApiResponse<void>>(`/rescue-teams/${id}`),
 };
 

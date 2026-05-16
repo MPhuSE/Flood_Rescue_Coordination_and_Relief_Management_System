@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polygon, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { rescueApi, shelterApi } from "../services/apiService";
-import type { RescueRequest, Shelter } from "../types/rescue";
-import { LifeBuoy, Shield, Layers } from "lucide-react";
+import { rescueApi, shelterApi, teamApi } from "../services/apiService";
+import type { RescueRequest, Shelter, RescueTeam } from "../types/rescue";
+import { LifeBuoy, Shield, Layers, Truck, TriangleAlert } from "lucide-react";
+import { useUserStore } from "../hooks/useUserStore";
 
 // Fix Leaflet default icon issue
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
@@ -16,6 +17,12 @@ L.Icon.Default.mergeOptions({
 
 const rescueIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
+});
+
+const teamIcon = new L.Icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
 });
@@ -40,38 +47,86 @@ function FitBounds({ positions }: { positions: [number, number][] }) {
   return null;
 }
 
+function MapDrawHandler({ isDrawing, onAddPoint, onFinish }: any) {
+  useMapEvents({
+    click(e) {
+      if (!isDrawing) return;
+      onAddPoint([e.latlng.lat, e.latlng.lng]);
+    },
+    contextmenu(e) {
+      e.originalEvent.preventDefault();
+      if (isDrawing) onFinish();
+    }
+  });
+  return null;
+}
+
 export function MapPage() {
+  const profile = useUserStore(s => s.profile);
+  const isAdmin = profile?.role === "ADMIN" || profile?.role === "COORDINATOR";
+
   const [requests, setRequests] = useState<RescueRequest[]>([]);
   const [shelters, setShelters] = useState<Shelter[]>([]);
+  const [teams, setTeams] = useState<RescueTeam[]>([]);
+  
   const [showRequests, setShowRequests] = useState(true);
   const [showShelters, setShowShelters] = useState(true);
+  const [showTeams, setShowTeams] = useState(true);
 
-  useEffect(() => {
+  // Geo-fencing state
+  const [dangerZones, setDangerZones] = useState<[number, number][][]>([]);
+  const [drawingZone, setDrawingZone] = useState<[number, number][]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+
+  const loadData = () => {
     rescueApi.getAll().then(setRequests).catch(() => {});
     shelterApi.getAll().then(setShelters).catch(() => {});
+    teamApi.getAll().then(setTeams).catch(() => {});
+  };
+
+  useEffect(() => {
+    loadData();
+    const interval = setInterval(loadData, 10000); // Tự động refresh mỗi 10s (Live Dashboard)
+    return () => clearInterval(interval);
   }, []);
 
   const allPositions: [number, number][] = [
     ...(showRequests ? requests.filter(r => r.latitude && r.longitude).map(r => [r.latitude, r.longitude] as [number, number]) : []),
     ...(showShelters ? shelters.filter(s => s.latitude && s.longitude).map(s => [s.latitude, s.longitude] as [number, number]) : []),
+    ...(showTeams ? teams.filter(t => t.latitude && t.longitude).map(t => [t.latitude, t.longitude] as [number, number]) : []),
   ];
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-ink">Bản đồ trực quan</h1>
-          <p className="text-sm text-slate">Vị trí yêu cầu cứu hộ và điểm an toàn trên bản đồ</p>
+          <h1 className="text-xl font-semibold text-ink flex items-center gap-2">Bản đồ Giám sát Trực quan <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-error"></span></span></h1>
+          <p className="text-sm text-slate">Cập nhật thời gian thực vị trí cứu hộ, điểm an toàn và đội hình</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {isAdmin && (
+            <button onClick={() => {
+              if (isDrawing) { setDangerZones([...dangerZones, drawingZone]); setDrawingZone([]); setIsDrawing(false); }
+              else { setIsDrawing(true); alert("Click chuột lên bản đồ để vẽ các điểm của vùng nguy hiểm. Click chuột phải để kết thúc vùng vẽ."); }
+            }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
+                ${isDrawing ? "bg-brand-orange-deep text-white shadow-md animate-pulse" : "bg-surface text-slate border border-hairline hover:bg-surface-soft"}`}>
+              <TriangleAlert size={14} /> {isDrawing ? "Hoàn tất vẽ" : "Khoanh vùng đỏ"}
+            </button>
+          )}
           <button onClick={() => setShowRequests(!showRequests)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-              ${showRequests ? "bg-semantic-error/10 text-semantic-error" : "bg-surface text-slate"}`}>
+              ${showRequests ? "bg-semantic-error/10 text-semantic-error" : "bg-surface text-slate border border-hairline"}`}>
             <LifeBuoy size={14} /> Cứu hộ
+          </button>
+          <button onClick={() => setShowTeams(!showTeams)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
+              ${showTeams ? "bg-link/10 text-link" : "bg-surface text-slate border border-hairline"}`}>
+            <Truck size={14} /> Đội cứu hộ
           </button>
           <button onClick={() => setShowShelters(!showShelters)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-              ${showShelters ? "bg-semantic-success/10 text-semantic-success" : "bg-surface text-slate"}`}>
+              ${showShelters ? "bg-semantic-success/10 text-semantic-success" : "bg-surface text-slate border border-hairline"}`}>
             <Shield size={14} /> Điểm an toàn
           </button>
         </div>
@@ -90,13 +145,29 @@ export function MapPage() {
               <Popup>
                 <div className="min-w-[200px]">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`inline-block w-2 h-2 rounded-full ${urgencyColors[req.urgencyLevel] || "bg-slate"}`} />
+                    <span className={`inline-block w-2 h-2 rounded-full ${urgencyColors[req.urgencyLevel] || "bg-slate"} ${req.status === 'PENDING' ? 'animate-ping' : ''}`} />
                     <span className="text-xs font-semibold">{req.urgencyLevel}</span>
                     <span className="text-xs text-slate">·</span>
                     <span className="text-xs font-medium">{req.status}</span>
                   </div>
                   <p className="text-sm font-medium mb-1">{req.description}</p>
                   <p className="text-xs text-slate">📍 {req.location}</p>
+                  <p className="text-xs font-bold text-semantic-error mt-2">Cần cứu: {req.numberOfPeople || 1} người</p>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+
+          {showTeams && teams.filter(t => t.latitude && t.longitude).map(team => (
+            <Marker key={`team-${team.teamId}`} position={[team.latitude, team.longitude]} icon={teamIcon}>
+              <Popup>
+                <div className="min-w-[200px]">
+                  <p className="text-sm font-semibold mb-1 text-link">{team.teamName}</p>
+                  <p className="text-xs text-slate mb-1">📞 {team.contactPhone}</p>
+                  <div className="flex gap-3 text-xs mt-2">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${team.status === 'ACTIVE' ? 'bg-semantic-success/20 text-semantic-success' : 'bg-brand-orange-deep/20 text-brand-orange-deep'}`}>{team.status}</span>
+                    <span>👤 {team.memberCount} thành viên</span>
+                  </div>
                 </div>
               </Popup>
             </Marker>
@@ -121,6 +192,24 @@ export function MapPage() {
               </Popup>
             </Marker>
           ))}
+
+          {/* Vùng nguy hiểm (Geo-fencing) */}
+          {dangerZones.map((zone, idx) => (
+             <Polygon key={`danger-${idx}`} positions={zone} pathOptions={{ color: '#ef4444', fillColor: '#fca5a5', fillOpacity: 0.4 }} />
+          ))}
+          {isDrawing && drawingZone.length > 0 && (
+             <Polygon positions={drawingZone} pathOptions={{ color: '#f97316', dashArray: '5, 5' }} />
+          )}
+          <MapDrawHandler isDrawing={isDrawing} 
+            onAddPoint={(pt: [number, number]) => setDrawingZone([...drawingZone, pt])} 
+            onFinish={() => { 
+              if (drawingZone.length > 2) {
+                setDangerZones([...dangerZones, drawingZone]); 
+              }
+              setDrawingZone([]); 
+              setIsDrawing(false); 
+            }} 
+          />
         </MapContainer>
       </div>
 
@@ -135,8 +224,16 @@ export function MapPage() {
           <span>Yêu cầu cứu hộ</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs">
+          <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png" className="h-5" />
+          <span>Đội cứu hộ</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs">
           <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png" className="h-5" />
           <span>Điểm an toàn</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs">
+          <div className="w-4 h-4 bg-error/40 border border-error"></div>
+          <span>Vùng rủi ro cao</span>
         </div>
         {Object.entries(urgencyColors).map(([k, v]) => (
           <div key={k} className="flex items-center gap-1.5 text-xs">

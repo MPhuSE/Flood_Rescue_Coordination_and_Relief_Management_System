@@ -25,6 +25,8 @@ public class CreateRescueRequestDTO {
 
     private String image;
 
+    private Integer numberOfPeople;
+
     @NotBlank(message = "Mức độ khẩn cấp không được để trống")
     private String urgencyLevel;
 
@@ -33,13 +35,14 @@ public class CreateRescueRequestDTO {
 
     public CreateRescueRequestDTO(String description, String location,
             Double latitude, Double longitude,
-            String image, String urgencyLevel) {
+            String image, String urgencyLevel, Integer numberOfPeople) {
         this.description = description;
         this.location = location;
         this.latitude = latitude;
         this.longitude = longitude;
         this.image = image;
         this.urgencyLevel = urgencyLevel;
+        this.numberOfPeople = numberOfPeople;
     }
 
     // Getters and Setters
@@ -81,6 +84,14 @@ public class CreateRescueRequestDTO {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public Integer getNumberOfPeople() {
+        return numberOfPeople;
+    }
+
+    public void setNumberOfPeople(Integer numberOfPeople) {
+        this.numberOfPeople = numberOfPeople;
     }
 
     public String getUrgencyLevel() {

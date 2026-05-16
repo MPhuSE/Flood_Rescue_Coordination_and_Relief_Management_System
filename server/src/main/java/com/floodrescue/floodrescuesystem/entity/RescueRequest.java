@@ -27,8 +27,11 @@ public class RescueRequest {
     @Column(name = "longitude")
     private Double longitude;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String image;
+
+    @Column(name = "number_of_people")
+    private Integer numberOfPeople = 1;
 
     @Column(name = "urgency_level")
     @Enumerated(EnumType.STRING)
@@ -58,7 +61,7 @@ public class RescueRequest {
 
     public RescueRequest(User user, String description, String location, 
                         Double latitude, Double longitude, String image, 
-                        UrgencyLevel urgencyLevel) {
+                        UrgencyLevel urgencyLevel, Integer numberOfPeople) {
         this();
         this.user = user;
         this.description = description;
@@ -67,6 +70,7 @@ public class RescueRequest {
         this.longitude = longitude;
         this.image = image;
         this.urgencyLevel = urgencyLevel;
+        this.numberOfPeople = numberOfPeople != null ? numberOfPeople : 1;
     }
 
     // Getters and Setters
@@ -124,6 +128,14 @@ public class RescueRequest {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public Integer getNumberOfPeople() {
+        return numberOfPeople;
+    }
+
+    public void setNumberOfPeople(Integer numberOfPeople) {
+        this.numberOfPeople = numberOfPeople;
     }
 
     public UrgencyLevel getUrgencyLevel() {

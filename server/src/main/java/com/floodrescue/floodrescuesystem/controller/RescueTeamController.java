@@ -55,4 +55,12 @@ public class RescueTeamController {
         rescueTeamService.deleteTeam(id);
         return ApiResponse.success("Team deleted", null);
     }
+
+    @PatchMapping("/{id}/location")
+    @Operation(summary = "Cập nhật vị trí đội cứu hộ", description = "Cập nhật vị trí GPS thực tế")
+    public ApiResponse<RescueTeamResponse> updateLocation(
+            @PathVariable Long id,
+            @RequestBody com.floodrescue.floodrescuesystem.dto.request.UpdateLocationRequest request) {
+        return ApiResponse.success("Team location updated", rescueTeamService.updateTeamLocation(id, request.getLatitude(), request.getLongitude()));
+    }
 }

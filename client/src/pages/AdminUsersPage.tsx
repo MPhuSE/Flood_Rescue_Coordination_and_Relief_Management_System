@@ -81,9 +81,38 @@ export function AdminUsersPage() {
                   <td className="px-4 py-3 font-medium">{u.fullName}</td>
                   <td className="px-4 py-3 text-slate">@{u.username}</td>
                   <td className="px-4 py-3 text-xs">{u.email || "-"}</td>
-                  <td className="px-4 py-3"><span className={roleBadge[u.role || ""] || "badge-soft-purple"}>{u.role}</span></td>
-                  <td className="px-4 py-3"><span className={u.status === "ACTIVE" ? "badge-green" : "badge-red"}>{u.status}</span></td>
                   <td className="px-4 py-3">
+                    <select 
+                      className={`text-xs font-semibold rounded px-2 py-1 outline-none border ${roleBadge[u.role || ""] || "badge-soft-purple"}`}
+                      value={u.role}
+                      onChange={async (e) => {
+                        try {
+                          await adminApi.updateRole(u.id, e.target.value);
+                          load();
+                        } catch { alert("Lỗi khi cập nhật vai trò"); }
+                      }}
+                    >
+                      {["CITIZEN", "RESCUER", "COORDINATOR", "MANAGER", "ADMIN"].map(r => (
+                        <option key={r} value={r} className="bg-white text-ink">{r}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <select 
+                      className={`text-xs font-medium rounded px-2 py-1 outline-none border ${u.status === "ACTIVE" ? "badge-green" : "badge-red"}`}
+                      value={u.status}
+                      onChange={async (e) => {
+                        try {
+                          await adminApi.updateStatus(u.id, e.target.value);
+                          load();
+                        } catch { alert("Lỗi khi cập nhật trạng thái"); }
+                      }}
+                    >
+                      <option value="ACTIVE" className="bg-white text-ink">ACTIVE</option>
+                      <option value="LOCKED" className="bg-white text-ink">LOCKED</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-right">
                     <button onClick={() => handleDelete(u.id)} className="p-1.5 rounded hover:bg-semantic-error/10 transition-colors">
                       <Trash2 size={14} className="text-semantic-error" />
                     </button>

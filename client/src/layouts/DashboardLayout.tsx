@@ -11,14 +11,14 @@ import { useUserStore } from "../hooks/useUserStore";
 type NavItem = { label: string; path: string; icon: React.ReactNode; roles?: string[] };
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={18} /> },
+  { label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={18} />, roles: ["ADMIN", "MANAGER", "COORDINATOR"] },
   { label: "Bản đồ", path: "/map", icon: <MapPin size={18} /> },
-  { label: "Yêu cầu cứu hộ", path: "/rescue-requests", icon: <LifeBuoy size={18} /> },
+  { label: "Yêu cầu cứu hộ", path: "/rescue-requests", icon: <LifeBuoy size={18} />, roles: ["CITIZEN", "COORDINATOR", "RESCUER", "ADMIN"] },
   { label: "Đội cứu hộ", path: "/teams", icon: <Users size={18} />, roles: ["ADMIN", "COORDINATOR"] },
-  { label: "Phương tiện", path: "/vehicles", icon: <Truck size={18} />, roles: ["ADMIN", "COORDINATOR", "MANAGER"] },
+  { label: "Phương tiện", path: "/vehicles", icon: <Truck size={18} />, roles: ["ADMIN", "MANAGER", "COORDINATOR"] },
   { label: "Hàng cứu trợ", path: "/relief", icon: <Package size={18} />, roles: ["ADMIN", "MANAGER"] },
-  { label: "Điểm an toàn", path: "/shelters", icon: <Shield size={18} /> },
-  { label: "Cảnh báo lũ", path: "/alerts", icon: <AlertTriangle size={18} /> },
+  { label: "Điểm an toàn", path: "/shelters", icon: <Shield size={18} />, roles: ["CITIZEN", "ADMIN", "MANAGER"] },
+  { label: "Cảnh báo lũ", path: "/alerts", icon: <AlertTriangle size={18} />, roles: ["CITIZEN", "ADMIN", "MANAGER"] },
   { label: "Thông báo", path: "/notifications", icon: <Bell size={18} /> },
   { label: "Quản lý Users", path: "/admin/users", icon: <Users size={18} />, roles: ["ADMIN"] },
 ];

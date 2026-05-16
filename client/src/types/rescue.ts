@@ -1,17 +1,18 @@
 export type RescueRequest = {
   requestId: number; description: string; location: string;
   latitude: number; longitude: number; urgencyLevel: string;
-  status: string; image?: string; notes?: string;
+  status: string; image?: string; notes?: string; numberOfPeople: number;
   userId: number; assignedTeamId?: number; assignedTeamName?: string;
   createdTime: string; updatedTime?: string;
 };
 export type CreateRescueRequest = {
   description: string; location: string;
-  latitude: number; longitude: number; urgencyLevel: string; imageUrl?: string;
+  latitude: number; longitude: number; urgencyLevel: string; image?: string; numberOfPeople: number;
 };
 export type RescueTeam = {
   teamId: number; teamName: string; memberCount: number;
   contactPhone: string; status: string; currentLocation: string;
+  latitude: number; longitude: number;
   teamLeaderId: number; teamLeaderName?: string;
   description?: string; createdAt: string; vehicleNames?: string[];
 };
@@ -27,9 +28,13 @@ export type ReliefItem = {
   description?: string; createdAt: string;
 };
 export type ReliefDistribution = {
-  id: number; rescueRequestId: number; reliefItemId: number;
-  reliefItemName?: string; quantityDistributed: number;
-  distributionDate: string; notes?: string;
+  id: number; itemId: number; itemName?: string;
+  quantity: number; recipientName?: string; recipientLocation?: string;
+  distributedById?: number; distributedByName?: string;
+  rescueRequestId?: number; notes?: string; distributedAt?: string;
+  // Frontend-only fields for form
+  reliefItemId?: number; recipientType?: string; recipientId?: number;
+  quantityDistributed?: number; distributionDate?: string;
 };
 export type Shelter = {
   id: number; name: string; location: string;

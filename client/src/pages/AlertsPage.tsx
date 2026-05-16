@@ -3,10 +3,14 @@ import { Plus, AlertTriangle, Clock } from "lucide-react";
 import { alertApi } from "../services/apiService";
 import type { FloodAlert } from "../types/rescue";
 
+import { useUserStore } from "../hooks/useUserStore";
+
 const severityBadge: Record<string, string> = { EMERGENCY: "badge-red", WARNING: "badge-orange", WATCH: "badge-blue", ADVISORY: "badge-soft-purple" };
 const severityBg: Record<string, string> = { EMERGENCY: "border-l-semantic-error", WARNING: "border-l-brand-orange-deep", WATCH: "border-l-link", ADVISORY: "border-l-brand-purple" };
 
 export function AlertsPage() {
+  const profile = useUserStore(s => s.profile);
+  const userRole = profile?.role || "";
   const [alerts, setAlerts] = useState<FloodAlert[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", severity: "WARNING", locationArea: "" });
@@ -16,7 +20,15 @@ export function AlertsPage() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    try { await alertApi.create(form); setShowForm(false); load(); } catch {}
+    try { 
+      await alertApi.create(form); 
+      setShowForm(false); 
+      setForm({ title: "", description: "", severity: "WARNING", locationArea: "" });
+      alert("Phát cảnh báo thành công!");
+      load(); 
+    } catch (err: any) {
+      alert("Lỗi phát cảnh báo: " + (err.response?.data?.message || err.message));
+    }
   }
 
   return (
@@ -24,7 +36,9 @@ export function AlertsPage() {
       <div className="flex items-center justify-between">
         <div><h1 className="text-xl font-semibold text-ink">Cảnh báo lũ lụt</h1>
           <p className="text-sm text-slate">Quản lý cảnh báo thiên tai</p></div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-primary"><Plus size={16} /> Tạo cảnh báo</button>
+        {(userRole === "ADMIN" || userRole === "COORDINATOR" || userRole === "MANAGER") && (
+          <button onClick={() => setShowForm(!showForm)} className="btn-primary"><Plus size={16} /> Tạo cảnh báo</button>
+        )}
       </div>
 
       {showForm && (

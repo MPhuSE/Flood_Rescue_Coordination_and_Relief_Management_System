@@ -70,7 +70,8 @@ public class RescueRequestService {
                 requestDTO.getLatitude(),
                 requestDTO.getLongitude(),
                 requestDTO.getImage(),
-                urgencyLevel);
+                urgencyLevel,
+                requestDTO.getNumberOfPeople());
 
         // Lưu vào database
         RescueRequest savedRequest = rescueRequestRepository.save(rescueRequest);
@@ -201,9 +202,42 @@ public class RescueRequestService {
             }
         }
 
+        if (requestDTO.getNumberOfPeople() != null) {
+            rescueRequest.setNumberOfPeople(requestDTO.getNumberOfPeople());
+        }
+
         rescueRequest.setUpdatedTime(LocalDateTime.now());
         RescueRequest updatedRequest = rescueRequestRepository.save(rescueRequest);
         return mapToResponse(updatedRequest);
+    }
+
+    /**
+     * Cập nhật mức độ khẩn cấp
+     */
+    @Transactional
+    public RescueRequestResponse updateRescueRequestUrgency(Long requestId, String urgencyLevel) {
+        RescueRequest rescueRequest = rescueRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Yêu cầu cứu hộ không tồn tại với ID: " + requestId));
+        try {
+            rescueRequest.setUrgencyLevel(UrgencyLevel.valueOf(urgencyLevel.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Mức độ khẩn cấp không hợp lệ");
+        }
+        rescueRequest.setUpdatedTime(LocalDateTime.now());
+        return mapToResponse(rescueRequestRepository.save(rescueRequest));
+    }
+
+    /**
+     * Cập nhật vị trí trực tiếp (Ping SOS)
+     */
+    @Transactional
+    public RescueRequestResponse updateLocation(Long requestId, Double latitude, Double longitude) {
+        RescueRequest rescueRequest = rescueRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Yêu cầu cứu hộ không tồn tại với ID: " + requestId));
+        rescueRequest.setLatitude(latitude);
+        rescueRequest.setLongitude(longitude);
+        rescueRequest.setUpdatedTime(LocalDateTime.now());
+        return mapToResponse(rescueRequestRepository.save(rescueRequest));
     }
 
     /**
@@ -243,6 +277,7 @@ public class RescueRequestService {
         response.setLatitude(rescueRequest.getLatitude());
         response.setLongitude(rescueRequest.getLongitude());
         response.setImage(rescueRequest.getImage());
+        response.setNumberOfPeople(rescueRequest.getNumberOfPeople());
         response.setUrgencyLevel(rescueRequest.getUrgencyLevel());
         response.setStatus(rescueRequest.getStatus());
         response.setCreatedTime(rescueRequest.getCreatedTime());

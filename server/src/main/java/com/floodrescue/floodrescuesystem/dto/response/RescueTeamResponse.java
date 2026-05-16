@@ -14,6 +14,8 @@ public class RescueTeamResponse {
     private String status;
     private String contactPhone;
     private String currentLocation;
+    private Double latitude;
+    private Double longitude;
     private java.util.List<String> vehicleNames;
     private LocalDateTime createdAt;
 
@@ -30,6 +32,8 @@ public class RescueTeamResponse {
         r.status = team.getStatus() != null ? team.getStatus().name() : null;
         r.contactPhone = team.getContactPhone();
         r.currentLocation = team.getCurrentLocation();
+        r.latitude = team.getLatitude();
+        r.longitude = team.getLongitude();
         r.vehicleNames = team.getVehicles() != null ? 
             team.getVehicles().stream().map(v -> v.getName() + " (" + v.getType() + ")").collect(java.util.stream.Collectors.toList()) : 
             new java.util.ArrayList<>();
@@ -60,4 +64,9 @@ public class RescueTeamResponse {
 
     public java.util.List<String> getVehicleNames() { return vehicleNames; }
     public void setVehicleNames(java.util.List<String> vehicleNames) { this.vehicleNames = vehicleNames; }
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 }

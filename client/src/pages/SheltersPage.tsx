@@ -3,7 +3,11 @@ import { Plus, Shield, MapPin, Users as UsersIcon } from "lucide-react";
 import { shelterApi } from "../services/apiService";
 import type { Shelter } from "../types/rescue";
 
+import { useUserStore } from "../hooks/useUserStore";
+
 export function SheltersPage() {
+  const profile = useUserStore(s => s.profile);
+  const userRole = profile?.role || "";
   const [shelters, setShelters] = useState<Shelter[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", location: "", latitude: 0, longitude: 0, capacity: 100, currentOccupancy: 0, status: "OPEN", contactInfo: "" });
@@ -21,7 +25,9 @@ export function SheltersPage() {
       <div className="flex items-center justify-between">
         <div><h1 className="text-xl font-semibold text-ink">Điểm an toàn</h1>
           <p className="text-sm text-slate">Quản lý các điểm trú ẩn an toàn</p></div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-primary"><Plus size={16} /> Thêm điểm</button>
+        {(userRole === "ADMIN" || userRole === "MANAGER") && (
+          <button onClick={() => setShowForm(!showForm)} className="btn-primary"><Plus size={16} /> Thêm điểm</button>
+        )}
       </div>
 
       {showForm && (

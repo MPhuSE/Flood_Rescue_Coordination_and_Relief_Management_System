@@ -81,4 +81,16 @@ public class RescueTeamService {
                 .orElseThrow(() -> new ResourceNotFoundException("Rescue team not found with ID: " + teamId));
         rescueTeamRepository.delete(team);
     }
+
+    @Transactional
+    public RescueTeamResponse updateTeamLocation(Long teamId, Double latitude, Double longitude) {
+        RescueTeam team = rescueTeamRepository.findById(teamId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rescue team not found with ID: " + teamId));
+        team.setLatitude(latitude);
+        team.setLongitude(longitude);
+        RescueTeam saved = rescueTeamRepository.save(team);
+        String leaderName = userRepository.findById(team.getTeamLeaderId())
+                .map(User::getFullName).orElse("Unknown");
+        return RescueTeamResponse.fromEntity(saved, leaderName);
+    }
 }

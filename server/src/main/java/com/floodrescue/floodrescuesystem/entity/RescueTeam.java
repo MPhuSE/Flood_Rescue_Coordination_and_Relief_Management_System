@@ -35,6 +35,12 @@ public class RescueTeam {
     @Column(name = "current_location")
     private String currentLocation;
 
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -139,6 +145,22 @@ public class RescueTeam {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 
     public List<RescueRequest> getRescueRequests() {

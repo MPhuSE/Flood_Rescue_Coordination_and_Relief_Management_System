@@ -63,6 +63,13 @@ public class RescueRequestController {
         return ApiResponse.success("Confirmed rescued successfully", response);
     }
 
+    @PatchMapping("/{id}/location")
+    @Operation(summary = "Cập nhật vị trí SOS", description = "Citizen gửi ping vị trí liên tục khi nguy cấp")
+    public ApiResponse<RescueRequestResponse> updateLocation(@PathVariable Long id, @RequestBody java.util.Map<String, Double> location) {
+        RescueRequestResponse response = rescueRequestService.updateLocation(id, location.get("latitude"), location.get("longitude"));
+        return ApiResponse.success("Location updated successfully", response);
+    }
+
     // ========== COORDINATOR APIs ==========
 
     @GetMapping
@@ -99,6 +106,15 @@ public class RescueRequestController {
             @RequestBody UpdateStatusRequest request) {
         RescueRequestResponse response = rescueRequestService.updateRescueRequestStatus(id, request.getStatus());
         return ApiResponse.success("Status updated successfully", response);
+    }
+
+    @PatchMapping("/{id}/urgency")
+    @Operation(summary = "Cập nhật mức độ khẩn cấp", description = "Coordinator thay đổi mức độ khẩn cấp của yêu cầu")
+    public ApiResponse<RescueRequestResponse> updateUrgency(
+            @PathVariable Long id,
+            @RequestBody UpdateStatusRequest request) { // Tái sử dụng class UpdateStatusRequest cho tiện (bên trong có trường status, ta gửi urgency qua trường status)
+        RescueRequestResponse response = rescueRequestService.updateRescueRequestUrgency(id, request.getStatus());
+        return ApiResponse.success("Urgency updated successfully", response);
     }
 
     @PutMapping("/{id}")
