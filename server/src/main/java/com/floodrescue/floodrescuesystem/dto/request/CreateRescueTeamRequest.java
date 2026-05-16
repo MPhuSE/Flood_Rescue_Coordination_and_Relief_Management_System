@@ -15,6 +15,10 @@ public class CreateRescueTeamRequest {
 
     private Integer memberCount;
 
+    private String contactPhone;
+
+    private String currentLocation;
+
     public CreateRescueTeamRequest() {}
 
     public String getTeamName() { return teamName; }
@@ -28,4 +32,10 @@ public class CreateRescueTeamRequest {
 
     public Integer getMemberCount() { return memberCount; }
     public void setMemberCount(Integer memberCount) { this.memberCount = memberCount; }
+
+    public String getContactPhone() { return contactPhone; }
+    public void setContactPhone(String contactPhone) { this.contactPhone = contactPhone; }
+
+    public String getCurrentLocation() { return currentLocation; }
+    public void setCurrentLocation(String currentLocation) { this.currentLocation = currentLocation; }
 }

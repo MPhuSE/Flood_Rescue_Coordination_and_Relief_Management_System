@@ -12,6 +12,9 @@ public class RescueTeamResponse {
     private String teamLeaderName;
     private Integer memberCount;
     private String status;
+    private String contactPhone;
+    private String currentLocation;
+    private java.util.List<String> vehicleNames;
     private LocalDateTime createdAt;
 
     public RescueTeamResponse() {}
@@ -25,6 +28,11 @@ public class RescueTeamResponse {
         r.teamLeaderName = leaderName;
         r.memberCount = team.getMemberCount();
         r.status = team.getStatus() != null ? team.getStatus().name() : null;
+        r.contactPhone = team.getContactPhone();
+        r.currentLocation = team.getCurrentLocation();
+        r.vehicleNames = team.getVehicles() != null ? 
+            team.getVehicles().stream().map(v -> v.getName() + " (" + v.getType() + ")").collect(java.util.stream.Collectors.toList()) : 
+            new java.util.ArrayList<>();
         r.createdAt = team.getCreatedAt();
         return r;
     }
@@ -43,6 +51,13 @@ public class RescueTeamResponse {
     public void setMemberCount(Integer memberCount) { this.memberCount = memberCount; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getContactPhone() { return contactPhone; }
+    public void setContactPhone(String contactPhone) { this.contactPhone = contactPhone; }
+    public String getCurrentLocation() { return currentLocation; }
+    public void setCurrentLocation(String currentLocation) { this.currentLocation = currentLocation; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public java.util.List<String> getVehicleNames() { return vehicleNames; }
+    public void setVehicleNames(java.util.List<String> vehicleNames) { this.vehicleNames = vehicleNames; }
 }

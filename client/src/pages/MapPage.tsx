@@ -86,7 +86,7 @@ export function MapPage() {
           <FitBounds positions={allPositions} />
 
           {showRequests && requests.filter(r => r.latitude && r.longitude).map(req => (
-            <Marker key={`req-${req.id}`} position={[req.latitude, req.longitude]} icon={rescueIcon}>
+            <Marker key={`req-${req.requestId}`} position={[req.latitude, req.longitude]} icon={rescueIcon}>
               <Popup>
                 <div className="min-w-[200px]">
                   <div className="flex items-center gap-2 mb-2">

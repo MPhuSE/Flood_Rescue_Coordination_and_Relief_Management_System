@@ -5,19 +5,28 @@ import { useUserStore } from "../hooks/useUserStore";
 import type { DashboardStats, RescueRequest, FloodAlert } from "../types/rescue";
 
 const statCards = [
-  { key: "totalRescueRequests", label: "Yêu cầu cứu hộ", icon: <LifeBuoy size={20} />, color: "bg-primary/10 text-primary" },
-  { key: "totalTeams", label: "Đội cứu hộ", icon: <Users size={20} />, color: "bg-tint-sky text-link" },
+  { key: "totalRescueRequests", label: "Yêu cầu cứu hộ", icon: <LifeBuoy size={20} />, color: "bg-tint-lavender text-primary" },
+  { key: "totalTeams", label: "Đội cứu hộ", icon: <Users size={20} />, color: "bg-tint-sky text-link-blue" },
   { key: "totalVehicles", label: "Phương tiện", icon: <Truck size={20} />, color: "bg-tint-mint text-brand-green" },
   { key: "totalReliefItems", label: "Hàng cứu trợ", icon: <Package size={20} />, color: "bg-tint-peach text-brand-orange-deep" },
-  { key: "totalShelters", label: "Điểm an toàn", icon: <Shield size={20} />, color: "bg-tint-lavender text-brand-purple-800" },
-  { key: "totalAlerts", label: "Cảnh báo lũ", icon: <AlertTriangle size={20} />, color: "bg-tint-rose text-brand-pink-deep" },
+  { key: "totalShelters", label: "Điểm an toàn", icon: <Shield size={20} />, color: "bg-tint-yellow text-brand-yellow" },
+  { key: "totalAlerts", label: "Cảnh báo lũ", icon: <AlertTriangle size={20} />, color: "bg-tint-rose text-error" },
 ] as const;
 
 const statusColors: Record<string, string> = {
-  PENDING: "badge-soft-orange", ASSIGNED: "badge-blue", IN_PROGRESS: "badge-purple",
-  COMPLETED: "badge-green", CANCELLED: "badge-red", CRITICAL: "badge-red",
-  HIGH: "badge-orange", MEDIUM: "badge-blue", LOW: "badge-soft-green",
-  EMERGENCY: "badge-red", WARNING: "badge-orange", WATCH: "badge-blue", ADVISORY: "badge-soft-purple",
+  PENDING: "badge-orange", 
+  ASSIGNED: "badge-blue", 
+  IN_PROGRESS: "badge-purple",
+  COMPLETED: "badge-green", 
+  CANCELLED: "badge-red", 
+  CRITICAL: "badge-red",
+  HIGH: "badge-orange", 
+  MEDIUM: "badge-blue", 
+  LOW: "badge-green",
+  EMERGENCY: "badge-red", 
+  WARNING: "badge-orange", 
+  WATCH: "badge-blue", 
+  ADVISORY: "badge-purple",
 };
 
 export function DashboardPage() {
@@ -35,16 +44,32 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Welcome */}
-      <div className="card p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-ink">Xin chào, {profile?.fullName || "User"} 👋</h1>
-            <p className="text-sm text-slate mt-1">Tổng quan hoạt động cứu hộ – cứu trợ hôm nay</p>
+      {/* Hero Welcome Section */}
+      <div className="card !bg-brand-navy !border-none p-10 relative overflow-hidden shadow-mockup">
+        <div className="absolute top-0 right-0 p-8 opacity-20 hidden md:block">
+           <LifeBuoy size={200} className="text-white rotate-12" />
+        </div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="px-2 py-0.5 rounded bg-primary text-[10px] font-bold text-white uppercase tracking-wider">Hệ thống cứu hộ v1.0</div>
+            <div className="flex items-center gap-1">
+               <Activity size={12} className="text-brand-green" />
+               <span className="text-[10px] font-semibold text-brand-green uppercase tracking-wider">Trực tuyến</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Activity size={16} className="text-semantic-success" />
-            <span className="text-sm font-medium text-semantic-success">Hệ thống hoạt động</span>
+          <h1 className="hero-display !text-4xl lg:!text-5xl text-white mb-2 leading-tight">
+            Xin chào, {profile?.fullName || "User"}.
+          </h1>
+          <p className="text-lg text-white/70 max-w-xl font-medium mb-6">
+            Cùng nỗ lực điều phối và cứu hộ để giảm thiểu thiệt hại do thiên tai gây ra.
+          </p>
+          <div className="flex items-center gap-3">
+            <button className="btn-primary">
+              Xem báo cáo chi tiết
+            </button>
+            <button className="btn-secondary !text-white !border-white/20 !bg-white/5 hover:!bg-white/10">
+              Hướng dẫn sử dụng
+            </button>
           </div>
         </div>
       </div>
@@ -76,7 +101,7 @@ export function DashboardPage() {
             {recentRequests.length === 0 ? (
               <p className="p-4 text-sm text-slate">Chưa có yêu cầu nào</p>
             ) : recentRequests.map(req => (
-              <div key={req.id} className="flex items-center justify-between p-4 hover:bg-surface-soft transition-colors">
+              <div key={req.requestId} className="flex items-center justify-between p-4 hover:bg-surface-soft transition-colors">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-ink truncate">{req.description}</p>
                   <p className="text-xs text-slate mt-0.5">📍 {req.location}</p>

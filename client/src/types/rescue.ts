@@ -1,8 +1,8 @@
 export type RescueRequest = {
-  id: number; description: string; location: string;
+  requestId: number; description: string; location: string;
   latitude: number; longitude: number; urgencyLevel: string;
-  status: string; imageUrl?: string; notes?: string;
-  userId: number; teamId?: number; teamName?: string;
+  status: string; image?: string; notes?: string;
+  userId: number; assignedTeamId?: number; assignedTeamName?: string;
   createdTime: string; updatedTime?: string;
 };
 export type CreateRescueRequest = {
@@ -12,12 +12,14 @@ export type CreateRescueRequest = {
 export type RescueTeam = {
   teamId: number; teamName: string; memberCount: number;
   contactPhone: string; status: string; currentLocation: string;
-  description?: string; createdAt: string;
+  teamLeaderId: number; teamLeaderName?: string;
+  description?: string; createdAt: string; vehicleNames?: string[];
 };
 export type RescueVehicle = {
   vehicleId: number; name: string; type: string; licensePlate: string;
   capacity: number; currentLocation: string; status: string;
-  assignedTeamId?: number; notes?: string; createdAt: string;
+  assignedTeamId?: number; assignedTeamName?: string;
+  notes?: string; createdAt: string;
 };
 export type ReliefItem = {
   id: number; name: string; category: string; unit: string;

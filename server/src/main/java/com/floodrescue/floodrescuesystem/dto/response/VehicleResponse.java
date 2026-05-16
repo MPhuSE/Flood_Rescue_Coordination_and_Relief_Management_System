@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public class VehicleResponse {
 
-    private Long id;
+    private Long vehicleId;
     private String name;
     private String type;
     private String licensePlate;
@@ -21,7 +21,7 @@ public class VehicleResponse {
 
     public static VehicleResponse fromEntity(RescueVehicle v) {
         VehicleResponse r = new VehicleResponse();
-        r.id = v.getId();
+        r.vehicleId = v.getId();
         r.name = v.getName();
         r.type = v.getType();
         r.licensePlate = v.getLicensePlate();
@@ -37,8 +37,8 @@ public class VehicleResponse {
         return r;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getVehicleId() { return vehicleId; }
+    public void setVehicleId(Long vehicleId) { this.vehicleId = vehicleId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getType() { return type; }

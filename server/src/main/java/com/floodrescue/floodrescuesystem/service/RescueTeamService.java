@@ -34,6 +34,8 @@ public class RescueTeamService {
         team.setDescription(request.getDescription());
         team.setTeamLeaderId(request.getTeamLeaderId());
         team.setMemberCount(request.getMemberCount() != null ? request.getMemberCount() : 1);
+        team.setContactPhone(request.getContactPhone());
+        team.setCurrentLocation(request.getCurrentLocation());
         team.setStatus(RescueTeam.TeamStatus.ACTIVE);
 
         RescueTeam saved = rescueTeamRepository.save(team);

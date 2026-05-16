@@ -20,27 +20,26 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex font-sans">
       {/* Left - Branding Panel */}
-      <div className="hidden lg:flex lg:w-[480px] bg-navy-deep text-white flex-col justify-between p-10">
+      <div className="hidden lg:flex lg:w-[480px] bg-brand-navy text-on-dark flex-col justify-between p-12">
         <div>
           <div className="flex items-center gap-3 mb-16">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center text-white">
               <LifeBuoy size={22} />
             </div>
-            <span className="text-lg font-semibold">Flood Rescue</span>
+            <span className="text-lg font-semibold tracking-tight">Flood Rescue</span>
           </div>
-          <h2 className="text-4xl font-semibold leading-tight mb-4">
-            Hệ thống Điều phối<br />Cứu hộ Lũ lụt
+          <h2 className="heading-1 !text-4xl text-white leading-tight mb-6">
+            Hệ thống<br />Điều phối Cứu hộ
           </h2>
-          <p className="text-white/60 text-sm leading-relaxed max-w-sm">
-            Quản lý tập trung hoạt động cứu hộ – cứu trợ, hỗ trợ tiếp nhận yêu cầu,
-            định vị, phân loại mức độ khẩn cấp và điều phối lực lượng.
+          <p className="text-white/60 text-base leading-relaxed max-w-sm font-medium">
+            Quản lý tập trung hoạt động cứu hộ, tiếp nhận yêu cầu và điều phối lực lượng ứng cứu nhanh chóng.
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          {["Cứu hộ nhanh", "Điều phối", "Bản đồ", "Cảnh báo lũ"].map(t => (
-            <span key={t} className="px-3 py-1.5 rounded-full border border-white/20 text-xs text-white/70">{t}</span>
+        <div className="flex flex-wrap gap-2">
+          {["Cứu hộ", "Điều phối", "Bản đồ", "Cảnh báo"].map(t => (
+            <span key={t} className="px-3 py-1 rounded-md border border-white/10 text-xs font-semibold text-white/50 uppercase tracking-wider">{t}</span>
           ))}
         </div>
       </div>

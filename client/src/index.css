@@ -2,66 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @layer base {
+  :root {
+    --primary: #6366f1;
+    --primary-pressed: #4f46e5;
+    --primary-deep: #3730a3;
+    --brand-navy: #0b1120;
+    --brand-navy-deep: #020617;
+    --brand-navy-mid: #1e293b;
+    --link-blue: #2383e2;
+    
+    --brand-pink: #d44079;
+    --brand-orange: #d9730d;
+    --brand-orange-deep: #ad5700;
+    --brand-purple: #9065b0;
+    --brand-purple-800: #4a2b6a;
+    --brand-teal: #129291;
+    --brand-green: #0b6e4f;
+    --brand-yellow: #dfab01;
+    
+    --tint-peach: #fff0e5;
+    --tint-rose: #fff0f5;
+    --tint-mint: #f0fff4;
+    --tint-lavender: #f5f3ff;
+    --tint-sky: #f0f9ff;
+    --tint-yellow: #fefce8;
+    --tint-yellow-bold: #fde047;
+    --tint-gray: #f9fafb;
+    
+    --canvas: #ffffff;
+    --surface: #f7f7f5;
+    --surface-soft: #f1f1ef;
+    --hairline: rgba(15, 15, 15, 0.1);
+    --hairline-soft: rgba(15, 15, 15, 0.05);
+    --hairline-strong: rgba(15, 15, 15, 0.2);
+    
+    --ink-deep: #050505;
+    --ink: #37352f;
+    --charcoal: #403e39;
+    --slate: #787774;
+    --steel: #9b9a97;
+    --stone: #acaba9;
+    --on-dark: #ffffff;
+    
+    --success: #0b6e4f;
+    --warning: #d9730d;
+    --error: #d44000;
+  }
+
   body {
-    @apply font-sans text-ink antialiased bg-surface;
+    @apply font-sans bg-canvas text-ink antialiased;
   }
 }
 
 @layer components {
+  .hero-display {
+    @apply text-5xl md:text-7xl lg:text-[80px] font-semibold leading-[1.05] tracking-tight;
+  }
+  
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white font-medium text-sm
-           rounded-md transition-all duration-150 hover:bg-primary-pressed active:bg-primary-deep
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-md transition-colors active:bg-primary-pressed disabled:opacity-50;
   }
-  .btn-dark {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-ink-deep text-white font-medium text-sm
-           rounded-md transition-all duration-150 hover:opacity-90
-           disabled:opacity-50 disabled:cursor-not-allowed;
-  }
+
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-transparent text-ink font-medium text-sm
-           rounded-md border border-hairline-strong transition-all duration-150 hover:bg-surface
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-transparent text-ink text-sm font-medium rounded-md border border-hairline-strong transition-all;
   }
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-3 py-2 bg-transparent text-ink font-medium text-sm
-           rounded-sm transition-all duration-150 hover:bg-surface
-           disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-semantic-error text-white font-medium text-sm
-           rounded-md transition-all duration-150 hover:opacity-90
-           disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  .btn-success {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-semantic-success text-white font-medium text-sm
-           rounded-md transition-all duration-150 hover:opacity-90
-           disabled:opacity-50 disabled:cursor-not-allowed;
-  }
+
   .card {
-    @apply bg-canvas rounded-lg border border-hairline shadow-card;
+    @apply bg-canvas border border-hairline rounded-lg p-6 shadow-sm;
   }
+
   .input-field {
-    @apply w-full px-3 py-2.5 bg-canvas text-ink border border-hairline-strong rounded-md text-sm
-           outline-none transition-all duration-150
-           focus:border-primary focus:ring-2 focus:ring-primary/20
-           placeholder:text-muted;
+    @apply w-full px-3 py-2 bg-canvas border border-hairline-strong rounded-md text-sm outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary;
   }
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-full;
-  }
-  .badge-purple { @apply badge bg-primary text-white; }
-  .badge-green { @apply badge bg-semantic-success text-white; }
-  .badge-orange { @apply badge bg-brand-orange-deep text-white; }
-  .badge-red { @apply badge bg-semantic-error text-white; }
-  .badge-blue { @apply badge bg-link text-white; }
-  .badge-soft-purple { @apply badge bg-tint-lavender text-brand-purple-800; }
-  .badge-soft-green { @apply badge bg-tint-mint text-brand-green; }
-  .badge-soft-orange { @apply badge bg-tint-peach text-brand-orange-deep; }
+
+  /* Badge Styles */
+  .badge-purple { @apply px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-wider; }
+  .badge-green { @apply px-2 py-0.5 rounded-full bg-tint-mint text-brand-green text-[10px] font-bold uppercase tracking-wider; }
+  .badge-orange { @apply px-2 py-0.5 rounded-full bg-tint-peach text-brand-orange text-[10px] font-bold uppercase tracking-wider; }
+  .badge-red { @apply px-2 py-0.5 rounded-full bg-tint-rose text-error text-[10px] font-bold uppercase tracking-wider; }
+  .badge-blue { @apply px-2 py-0.5 rounded-full bg-tint-sky text-link-blue text-[10px] font-bold uppercase tracking-wider; }
 }
 
-/* Leaflet overrides */
-.leaflet-container { @apply rounded-lg z-0; }
+@layer utilities {
+  .shadow-mockup {
+    box-shadow: 0px 24px 48px -8px rgba(15, 15, 15, 0.20);
+  }
+  .shadow-modal {
+    box-shadow: 0px 16px 48px -8px rgba(15, 15, 15, 0.16);
+  }
+}

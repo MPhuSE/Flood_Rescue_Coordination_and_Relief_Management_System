@@ -29,6 +29,12 @@ public class RescueTeam {
     @Enumerated(EnumType.STRING)
     private TeamStatus status;
 
+    @Column(name = "contact_phone")
+    private String contactPhone;
+
+    @Column(name = "current_location")
+    private String currentLocation;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -37,6 +43,9 @@ public class RescueTeam {
 
     @OneToMany(mappedBy = "assignedTeam")
     private List<RescueRequest> rescueRequests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "assignedTeam")
+    private List<RescueVehicle> vehicles = new ArrayList<>();
 
     public RescueTeam() {
         this.createdAt = LocalDateTime.now();
@@ -108,6 +117,22 @@ public class RescueTeam {
         this.createdAt = createdAt;
     }
 
+    public String getContactPhone() {
+        return contactPhone;
+    }
+
+    public void setContactPhone(String contactPhone) {
+        this.contactPhone = contactPhone;
+    }
+
+    public String getCurrentLocation() {
+        return currentLocation;
+    }
+
+    public void setCurrentLocation(String currentLocation) {
+        this.currentLocation = currentLocation;
+    }
+
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
@@ -122,6 +147,14 @@ public class RescueTeam {
 
     public void setRescueRequests(List<RescueRequest> rescueRequests) {
         this.rescueRequests = rescueRequests;
+    }
+
+    public List<RescueVehicle> getVehicles() {
+        return vehicles;
+    }
+
+    public void setVehicles(List<RescueVehicle> vehicles) {
+        this.vehicles = vehicles;
     }
 
     public enum TeamStatus {

@@ -42,34 +42,34 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-surface overflow-hidden">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-navy-deep text-white transform transition-transform duration-200 ease-in-out
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-navy text-on-dark transform transition-transform duration-200 ease-in-out
         lg:relative lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10">
-          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
+        <div className="flex items-center gap-3 px-5 py-6 border-b border-hairline-soft">
+          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center text-white">
             <LifeBuoy size={18} />
           </div>
           <div>
-            <h1 className="text-sm font-semibold leading-tight">Flood Rescue</h1>
-            <p className="text-[11px] text-white/50">Management System</p>
+            <h1 className="text-sm font-semibold leading-tight tracking-tight">Flood Rescue</h1>
+            <p className="text-[11px] text-on-dark/50 font-medium">Management System</p>
           </div>
         </div>
-        <nav className="flex-1 overflow-y-auto py-3 px-3">
+        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-0.5">
           {filteredNav.map(item => {
             const active = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
             return (
               <Link key={item.path} to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm mb-0.5 transition-colors duration-150
-                  ${active ? "bg-primary text-white font-medium" : "text-white/70 hover:bg-white/8 hover:text-white"}`}>
-                {item.icon}
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-150
+                  ${active ? "bg-primary text-white font-medium" : "text-on-dark/70 hover:bg-white/5 hover:text-on-dark"}`}>
+                <span className={`${active ? "text-white" : "text-on-dark/40"}`}>{item.icon}</span>
                 {item.label}
               </Link>
             );
           })}
         </nav>
-        <div className="p-3 border-t border-white/10">
+        <div className="p-3 border-t border-hairline-soft">
           <button onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-sm text-white/70 hover:bg-white/8 hover:text-white transition-colors">
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-on-dark/60 hover:bg-white/5 hover:text-on-dark transition-colors">
             <LogOut size={18} /> Đăng xuất
           </button>
         </div>

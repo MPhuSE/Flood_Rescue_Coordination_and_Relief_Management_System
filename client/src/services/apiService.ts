@@ -7,7 +7,7 @@ import type {
 } from "../types/rescue";
 import type { UserProfile } from "../types/user";
 
-// ─── Rescue Requests ───
+
 export const rescueApi = {
   getAll: () => http.get<ApiResponse<RescueRequest[]>>("/rescue-requests").then(r => r.data.data),
   getById: (id: number) => http.get<ApiResponse<RescueRequest>>(`/rescue-requests/${id}`).then(r => r.data.data),
@@ -38,6 +38,7 @@ export const vehicleApi = {
   create: (d: Partial<RescueVehicle>) => http.post<ApiResponse<RescueVehicle>>("/vehicles", d).then(r => r.data.data),
   update: (id: number, d: Partial<RescueVehicle>) => http.put<ApiResponse<RescueVehicle>>(`/vehicles/${id}`, d).then(r => r.data.data),
   updateStatus: (id: number, status: string) => http.patch<ApiResponse<RescueVehicle>>(`/vehicles/${id}/status`, { status }).then(r => r.data.data),
+  assignTeam: (vehicleId: number, teamId: number) => http.patch<ApiResponse<RescueVehicle>>(`/vehicles/${vehicleId}/assign-team`, { teamId }).then(r => r.data.data),
   delete: (id: number) => http.delete<ApiResponse<void>>(`/vehicles/${id}`),
 };
 
@@ -77,13 +78,14 @@ export const notifApi = {
   markAllRead: () => http.patch<ApiResponse<void>>("/notifications/read-all"),
 };
 
-// ─── Admin ───
 export const adminApi = {
+  getAllUsers: () => http.get<ApiResponse<UserProfile[]>>("/admin/users").then(r => r.data.data),
   getUsers: () => http.get<ApiResponse<UserProfile[]>>("/admin/users").then(r => r.data.data),
   getUserById: (id: number) => http.get<ApiResponse<UserProfile>>(`/admin/users/${id}`).then(r => r.data.data),
   createUser: (d: Record<string, string>) => http.post<ApiResponse<UserProfile>>("/admin/users", d).then(r => r.data.data),
   updateRole: (id: number, role: string) => http.patch<ApiResponse<UserProfile>>(`/admin/users/${id}/role`, { role }).then(r => r.data.data),
   updateStatus: (id: number, status: string) => http.patch<ApiResponse<UserProfile>>(`/admin/users/${id}/status`, { status }).then(r => r.data.data),
   deleteUser: (id: number) => http.delete<ApiResponse<void>>(`/admin/users/${id}`),
+  getStats: () => http.get<ApiResponse<DashboardStats>>("/admin/dashboard").then(r => r.data.data),
   getDashboard: () => http.get<ApiResponse<DashboardStats>>("/admin/dashboard").then(r => r.data.data),
 };
