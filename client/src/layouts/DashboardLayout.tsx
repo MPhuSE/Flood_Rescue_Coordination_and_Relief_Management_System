@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, LifeBuoy, Users, Truck, Package, Shield, AlertTriangle,
@@ -7,6 +7,7 @@ import {
 import { authActions } from "../store/authStore";
 import { userActions } from "../store/userStore";
 import { useUserStore } from "../hooks/useUserStore";
+import { notifApi } from "../services/apiService";
 
 type NavItem = { label: string; path: string; icon: React.ReactNode; roles?: string[] };
 
@@ -26,12 +27,29 @@ const navItems: NavItem[] = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const profile = useUserStore(s => s.profile);
   const userRole = profile?.role || "";
 
   const filteredNav = navItems.filter(item => !item.roles || item.roles.includes(userRole));
+
+  useEffect(() => {
+    loadUnreadCount();
+    // Pull every 5 seconds for real-time notification badge updates
+    const interval = setInterval(loadUnreadCount, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  async function loadUnreadCount() {
+    try {
+      const count = await notifApi.getUnreadCount();
+      setUnreadCount(count || 0);
+    } catch {
+      setUnreadCount(0);
+    }
+  }
 
   function handleLogout() {
     authActions.logout();
@@ -94,8 +112,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </h2>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/notifications" className="relative p-1.5 rounded-md hover:bg-surface transition-colors">
+            <Link to="/notifications" className="relative p-1.5 rounded-md hover:bg-surface transition-colors" title="Thông báo">
               <Bell size={18} className="text-slate" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-canvas animate-pulse">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </Link>
             <div className="relative">
               <button onClick={() => setProfileOpen(!profileOpen)}

@@ -127,11 +127,30 @@ public class RescueRequestController {
     }
 
     @PatchMapping("/{id}/status")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR', 'RESCUER')")
-    @Operation(summary = "Cập nhật trạng thái yêu cầu", description = "Coordinator cập nhật trạng thái xử lý yêu cầu")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR', 'RESCUER', 'CITIZEN')")
+    @Operation(summary = "Cập nhật trạng thái yêu cầu", description = "Cập nhật trạng thái xử lý yêu cầu")
     public ApiResponse<RescueRequestResponse> updateStatus(
+            Authentication auth,
             @PathVariable Long id,
             @RequestBody UpdateStatusRequest request) {
+        
+        User user = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        RescueRequestResponse currentRequest = rescueRequestService.getRescueRequestById(id);
+        
+        boolean isCitizen = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_CITIZEN") || a.getAuthority().equals("CITIZEN"));
+        
+        if (isCitizen) {
+            if (!currentRequest.getUserId().equals(user.getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Bạn không có quyền sửa đổi yêu cầu của người khác!");
+            }
+            if (!"CANCELLED".equalsIgnoreCase(request.getStatus())) {
+                throw new com.floodrescue.floodrescuesystem.exception.BadRequestException("Người dân chỉ có quyền Hủy yêu cầu của chính mình!");
+            }
+        }
+
         RescueRequestResponse response = rescueRequestService.updateRescueRequestStatus(id, request.getStatus());
         return ApiResponse.success("Status updated successfully", response);
     }

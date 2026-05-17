@@ -35,6 +35,9 @@ public class FloodAlertService {
         return mapToResponse(alert);
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private NotificationService notificationService;
+
     @CacheEvict(value = "floodAlerts", allEntries = true)
     public FloodAlertResponse createAlert(String username, CreateFloodAlertRequest request) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
@@ -45,6 +48,28 @@ public class FloodAlertService {
         alert.setLocationArea(request.getLocationArea());
         alert.setCreatedBy(user);
         FloodAlert saved = floodAlertRepository.save(alert);
+
+        try {
+            List<User> allUsers = userRepository.findAll();
+            String severityLevel = "Cảnh báo";
+            if ("EMERGENCY".equals(saved.getSeverity())) severityLevel = "🚨 KHẨN CẤP";
+            else if ("WARNING".equals(saved.getSeverity())) severityLevel = "⚠️ CẢNH BÁO";
+            else if ("WATCH".equals(saved.getSeverity())) severityLevel = "👀 THEO DÕI";
+            else if ("ADVISORY".equals(saved.getSeverity())) severityLevel = "ℹ️ TƯ VẤN";
+
+            for (User u : allUsers) {
+                notificationService.createNotification(
+                    u.getId(),
+                    severityLevel + ": " + saved.getTitle(),
+                    "Khu vực ảnh hưởng: " + saved.getLocationArea() + ". Chi tiết: " + saved.getDescription(),
+                    "FLOOD_ALERT",
+                    saved.getId()
+                );
+            }
+        } catch (Exception e) {
+            // Safe fallback
+        }
+
         return mapToResponse(saved);
     }
 

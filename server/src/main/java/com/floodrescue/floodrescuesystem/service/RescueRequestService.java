@@ -27,6 +27,9 @@ public class RescueRequestService {
     @Autowired
     private RescueTeamRepository rescueTeamRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     /**
      * Tạo yêu cầu cứu hộ mới
      */
@@ -75,6 +78,37 @@ public class RescueRequestService {
 
         // Lưu vào database
         RescueRequest savedRequest = rescueRequestRepository.save(rescueRequest);
+
+        try {
+            // Notify citizen who created it
+            notificationService.createNotification(
+                user.getId(),
+                "Đã tiếp nhận yêu cầu SOS",
+                "Yêu cầu cứu nạn '" + savedRequest.getDescription() + "' tại " + savedRequest.getLocation() + " đã được ghi nhận thành công.",
+                "SOS_REQUEST",
+                savedRequest.getRequestId()
+            );
+
+            // Notify all administrators, coordinators, and managers
+            List<User> staff = userRepository.findAll().stream()
+                    .filter(u -> {
+                        if (u.getRole() == null || u.getRole().getName() == null) return false;
+                        String r = u.getRole().getName().toUpperCase();
+                        return r.contains("ADMIN") || r.contains("COORDINATOR") || r.contains("MANAGER");
+                    })
+                    .collect(Collectors.toList());
+            for (User u : staff) {
+                notificationService.createNotification(
+                    u.getId(),
+                    "🚨 CA SOS KHẨN CẤP MỚI",
+                    "Yêu cầu SOS từ " + user.getFullName() + ": '" + savedRequest.getDescription() + "' tại " + savedRequest.getLocation(),
+                    "SOS_REQUEST",
+                    savedRequest.getRequestId()
+                );
+            }
+        } catch (Exception e) {
+            // Safe fallback to prevent transactional failure on notification errors
+        }
 
         return mapToResponse(savedRequest);
     }
@@ -146,6 +180,33 @@ public class RescueRequestService {
         rescueRequest.setUpdatedTime(LocalDateTime.now());
 
         RescueRequest updatedRequest = rescueRequestRepository.save(rescueRequest);
+
+        try {
+            // Notify team leader
+            if (rescueTeam.getTeamLeaderId() != null) {
+                notificationService.createNotification(
+                    rescueTeam.getTeamLeaderId(),
+                    "🎯 NHIỆM VỤ CỨU HỘ MỚI",
+                    "Đội của bạn đã được giao cứu hộ ca SOS #" + updatedRequest.getRequestId() + ": '" + updatedRequest.getDescription() + "' tại " + updatedRequest.getLocation(),
+                    "SOS_ASSIGNMENT",
+                    updatedRequest.getRequestId()
+                );
+            }
+
+            // Notify citizen
+            if (rescueRequest.getUser() != null) {
+                notificationService.createNotification(
+                    rescueRequest.getUser().getId(),
+                    "Đội cứu hộ đã xuất phát",
+                    "Đội '" + rescueTeam.getTeamName() + "' đã tiếp nhận ca SOS của bạn và đang di chuyển đến vị trí của bạn.",
+                    "SOS_ASSIGNMENT",
+                    updatedRequest.getRequestId()
+                );
+            }
+        } catch (Exception e) {
+            // Safe fallback
+        }
+
         return mapToResponse(updatedRequest);
     }
 
@@ -168,6 +229,26 @@ public class RescueRequestService {
         rescueRequest.setUpdatedTime(LocalDateTime.now());
 
         RescueRequest updatedRequest = rescueRequestRepository.save(rescueRequest);
+
+        try {
+            if (rescueRequest.getUser() != null) {
+                String vietnameseStatusText = "Đang chờ xử lý";
+                if (requestStatus == RequestStatus.ASSIGNED) vietnameseStatusText = "Đã giao cho đội cứu hộ";
+                else if (requestStatus == RequestStatus.IN_PROGRESS) vietnameseStatusText = "Đang tiến hành giải cứu";
+                else if (requestStatus == RequestStatus.COMPLETED) vietnameseStatusText = "Hoàn thành giải cứu an toàn";
+                
+                notificationService.createNotification(
+                    rescueRequest.getUser().getId(),
+                    "Cập nhật ca SOS #" + updatedRequest.getRequestId(),
+                    "Trạng thái ca cứu hộ của bạn đã chuyển sang: " + vietnameseStatusText,
+                    "SOS_STATUS",
+                    updatedRequest.getRequestId()
+                );
+            }
+        } catch (Exception e) {
+            // Safe fallback
+        }
+
         return mapToResponse(updatedRequest);
     }
 

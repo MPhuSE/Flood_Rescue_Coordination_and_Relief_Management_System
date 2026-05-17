@@ -27,6 +27,9 @@ public class ReliefService {
     private final UserRepository userRepository;
     private final RescueRequestRepository rescueRequestRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private NotificationService notificationService;
+
     public ReliefService(ReliefItemRepository itemRepository,
                          ReliefDistributionRepository distributionRepository,
                          UserRepository userRepository,
@@ -115,7 +118,31 @@ public class ReliefService {
 
         // Deduct stock
         item.setQuantityInStock(item.getQuantityInStock() - request.getQuantity());
-        itemRepository.save(item);
+        ReliefItem savedItem = itemRepository.save(item);
+
+        try {
+            if (savedItem.getMinimumStockLevel() != null && savedItem.getQuantityInStock() <= savedItem.getMinimumStockLevel()) {
+                // Notify managers and admins
+                List<User> staff = userRepository.findAll().stream()
+                        .filter(u -> {
+                            if (u.getRole() == null || u.getRole().getName() == null) return false;
+                            String r = u.getRole().getName().toUpperCase();
+                            return r.contains("ADMIN") || r.contains("MANAGER");
+                        })
+                        .collect(Collectors.toList());
+                for (User u : staff) {
+                    notificationService.createNotification(
+                        u.getId(),
+                        "⚠️ CẢNH BÁO KHO: SẮP HẾT HÀNG",
+                        "Mặt hàng '" + savedItem.getName() + "' chỉ còn lại " + savedItem.getQuantityInStock() + " " + savedItem.getUnit() + " trong kho (Mức tối thiểu: " + savedItem.getMinimumStockLevel() + "). Vui lòng nhập hàng bổ sung.",
+                        "LOW_STOCK",
+                        savedItem.getId()
+                    );
+                }
+            }
+        } catch (Exception e) {
+            // Safe fallback
+        }
 
         ReliefDistribution distribution = new ReliefDistribution();
         distribution.setItem(item);

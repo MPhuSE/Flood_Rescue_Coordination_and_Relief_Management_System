@@ -1,25 +1,54 @@
 import { useEffect, useState } from "react";
 import { Plus, Package, AlertTriangle, Archive, History, ArrowRight } from "lucide-react";
-import { reliefApi } from "../services/apiService";
-import type { ReliefItem, ReliefDistribution } from "../types/rescue";
+import { reliefApi, teamApi, shelterApi, rescueApi } from "../services/apiService";
+import type { ReliefItem, ReliefDistribution, RescueTeam, Shelter, RescueRequest } from "../types/rescue";
 
 export function ReliefPage() {
   const [activeTab, setActiveTab] = useState<"STOCK" | "DISTRIBUTIONS">("STOCK");
   const [items, setItems] = useState<ReliefItem[]>([]);
   const [distributions, setDistributions] = useState<ReliefDistribution[]>([]);
+  
+  // Recipient resources for beautiful dropdowns
+  const [teams, setTeams] = useState<RescueTeam[]>([]);
+  const [shelters, setShelters] = useState<Shelter[]>([]);
+  const [requests, setRequests] = useState<RescueRequest[]>([]);
+
   const [showForm, setShowForm] = useState(false);
   const [showDistForm, setShowDistForm] = useState(false);
   
   const [form, setForm] = useState({ name: "", category: "FOOD", unit: "Thùng", quantityInStock: 100, minimumStockLevel: 10, description: "" });
-  const [distForm, setDistForm] = useState({ reliefItemId: 0, quantity: 1, recipientType: "RESCUE_TEAM", recipientId: 1, notes: "" });
+  const [distForm, setDistForm] = useState({ reliefItemId: 0, quantity: 1, recipientType: "RESCUE_TEAM", recipientId: 0, notes: "" });
 
   useEffect(() => { load(); }, []);
   
   async function load() { 
     try { 
-      const [iData, dData] = await Promise.all([reliefApi.getItems(), reliefApi.getDistributions()]);
+      const [iData, dData, tData, sData, rData] = await Promise.all([
+        reliefApi.getItems(),
+        reliefApi.getDistributions(),
+        teamApi.getAll().catch(() => []),
+        shelterApi.getAll().catch(() => []),
+        rescueApi.getAll().catch(() => []),
+      ]);
+      
       setItems(iData || []); 
       setDistributions(dData || []);
+      setTeams(tData || []);
+      setShelters(sData || []);
+      setRequests(rData || []);
+
+      // Auto-default the selections
+      let defaultItemId = 0;
+      if (iData && iData.length > 0) defaultItemId = iData[0].id;
+
+      let defaultRecipientId = 0;
+      if (tData && tData.length > 0) defaultRecipientId = tData[0].teamId;
+
+      setDistForm(prev => ({
+        ...prev,
+        reliefItemId: defaultItemId,
+        recipientId: defaultRecipientId
+      }));
     } catch { 
       setItems([]); 
       setDistributions([]);
@@ -33,17 +62,61 @@ export function ReliefPage() {
 
   async function handleCreateDist(e: React.FormEvent) {
     e.preventDefault();
-    if (distForm.reliefItemId === 0) {
-      if (items.length > 0) distForm.reliefItemId = items[0].id;
+    
+    let targetReliefItemId = distForm.reliefItemId;
+    if (targetReliefItemId === 0) {
+      if (items.length > 0) targetReliefItemId = items[0].id;
       else { alert("Vui lòng thêm hàng vào kho trước."); return; }
     }
+
+    const selectedItem = items.find(i => i.id === targetReliefItemId);
+    if (!selectedItem) {
+      alert("Vui lòng chọn một mặt hàng hợp lệ.");
+      return;
+    }
+
+    if (selectedItem.quantityInStock < distForm.quantity) {
+      alert(`Xuất kho thất bại: Số lượng tồn kho không đủ (Hiện tại chỉ còn ${selectedItem.quantityInStock} ${selectedItem.unit}).`);
+      return;
+    }
+
+    let recipientName = "";
+    let recipientLocation = "";
+    let rescueRequestId: number | undefined = undefined;
+
+    // Map recipientId to actual names and locations
+    if (distForm.recipientType === "RESCUE_TEAM") {
+      const team = teams.find(t => t.teamId === distForm.recipientId);
+      recipientName = team ? team.teamName : `Đội cứu hộ #${distForm.recipientId}`;
+      recipientLocation = team ? team.currentLocation || "Tọa độ đội cứu hộ" : "Tọa độ đội cứu hộ";
+    } else if (distForm.recipientType === "SHELTER") {
+      const shelter = shelters.find(s => s.id === distForm.recipientId);
+      recipientName = shelter ? shelter.name : `Điểm an toàn #${distForm.recipientId}`;
+      recipientLocation = shelter ? shelter.location : "Vị trí điểm an toàn";
+    } else if (distForm.recipientType === "CITIZEN") {
+      const req = requests.find(r => r.requestId === distForm.recipientId);
+      recipientName = req ? `Hộ dân (SOS #${req.requestId})` : `Hộ dân #${distForm.recipientId}`;
+      recipientLocation = req ? req.location : "Vị trí hộ dân";
+      rescueRequestId = distForm.recipientId > 0 ? distForm.recipientId : undefined;
+    }
+
+    const payload = {
+      itemId: targetReliefItemId,
+      quantity: distForm.quantity,
+      recipientName,
+      recipientLocation,
+      rescueRequestId,
+      notes: distForm.notes
+    };
+
     try { 
-      await reliefApi.distribute(distForm); 
+      await reliefApi.distribute(payload); 
       setShowDistForm(false); 
       load(); 
       alert("Xuất kho viện trợ thành công!");
-    } catch {
-      alert("Xuất kho thất bại (Có thể số lượng tồn kho không đủ).");
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.message || "Lỗi kiểm tra tính hợp lệ dữ liệu của Server.";
+      alert(`Xuất kho thất bại: ${errMsg}`);
     }
   }
 
@@ -68,7 +141,21 @@ export function ReliefPage() {
             <button onClick={() => setShowForm(!showForm)} className="btn-primary"><Plus size={16} /> Nhập kho</button>
           )}
           {activeTab === "DISTRIBUTIONS" && (
-            <button onClick={() => setShowDistForm(!showDistForm)} className="btn-primary !bg-brand-orange-deep"><Plus size={16} /> Xuất cấp phát</button>
+            <button onClick={() => {
+              setShowDistForm(!showDistForm);
+              // Default values on toggling dist form
+              if (!showDistForm) {
+                const defaultItemId = items.length > 0 ? items[0].id : 0;
+                const defaultRecipientId = teams.length > 0 ? teams[0].teamId : 0;
+                setDistForm({
+                  reliefItemId: defaultItemId,
+                  quantity: 1,
+                  recipientType: "RESCUE_TEAM",
+                  recipientId: defaultRecipientId,
+                  notes: ""
+                });
+              }
+            }} className="btn-primary !bg-brand-orange-deep"><Plus size={16} /> Xuất cấp phát</button>
           )}
         </div>
       </div>
@@ -152,7 +239,7 @@ export function ReliefPage() {
           {showDistForm && (
             <div className="card p-6 animate-slide-up mb-4">
               <form onSubmit={handleCreateDist} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label className="block text-sm font-medium mb-1">Mặt hàng</label>
+                <div><label className="block text-sm font-medium mb-1">Mặt hàng xuất phát</label>
                   <select className="input-field" value={distForm.reliefItemId} onChange={e => setDistForm({ ...distForm, reliefItemId: +e.target.value })}>
                     {items.length === 0 && <option value={0}>-- Kho trống --</option>}
                     {items.map(i => <option key={i.id} value={i.id}>{i.name} (Tồn: {i.quantityInStock} {i.unit})</option>)}
@@ -160,14 +247,43 @@ export function ReliefPage() {
                 </div>
                 <div><label className="block text-sm font-medium mb-1">Số lượng xuất</label>
                   <input type="number" min="1" className="input-field" value={distForm.quantity} onChange={e => setDistForm({ ...distForm, quantity: +e.target.value })} /></div>
-                <div><label className="block text-sm font-medium mb-1">Đối tượng nhận (Loại)</label>
-                  <select className="input-field" value={distForm.recipientType} onChange={e => setDistForm({ ...distForm, recipientType: e.target.value })}>
+                
+                <div><label className="block text-sm font-medium mb-1">Đối tượng nhận (Phân loại)</label>
+                  <select className="input-field" value={distForm.recipientType} onChange={e => {
+                    const newType = e.target.value;
+                    let defaultId = 0;
+                    if (newType === "RESCUE_TEAM" && teams.length > 0) defaultId = teams[0].teamId;
+                    else if (newType === "SHELTER" && shelters.length > 0) defaultId = shelters[0].id;
+                    else if (newType === "CITIZEN" && requests.length > 0) defaultId = requests[0].requestId;
+                    setDistForm({ ...distForm, recipientType: newType, recipientId: defaultId });
+                  }}>
                     <option value="RESCUE_TEAM">Đội cứu hộ (Xuất lên xe/thuyền)</option>
-                    <option value="CITIZEN">Hộ dân (Phát trực tiếp)</option>
+                    <option value="CITIZEN">Hộ dân (Phát trực tiếp SOS)</option>
                     <option value="SHELTER">Điểm an toàn (Tiếp tế)</option>
-                  </select></div>
-                <div><label className="block text-sm font-medium mb-1">Mã đối tượng nhận (ID)</label>
-                  <input type="number" min="1" className="input-field" value={distForm.recipientId} onChange={e => setDistForm({ ...distForm, recipientId: +e.target.value })} /></div>
+                  </select>
+                </div>
+
+                <div><label className="block text-sm font-medium mb-1">Chọn đối tượng nhận cụ thể</label>
+                  {distForm.recipientType === "RESCUE_TEAM" && (
+                    <select className="input-field" value={distForm.recipientId} onChange={e => setDistForm({ ...distForm, recipientId: +e.target.value })}>
+                      {teams.length === 0 && <option value={0}>-- Không tìm thấy đội cứu hộ --</option>}
+                      {teams.map(t => <option key={t.teamId} value={t.teamId}>{t.teamName} (Lực lượng: {t.memberCount} người)</option>)}
+                    </select>
+                  )}
+                  {distForm.recipientType === "SHELTER" && (
+                    <select className="input-field" value={distForm.recipientId} onChange={e => setDistForm({ ...distForm, recipientId: +e.target.value })}>
+                      {shelters.length === 0 && <option value={0}>-- Không tìm thấy điểm an toàn --</option>}
+                      {shelters.map(s => <option key={s.id} value={s.id}>{s.name} (Đang chứa: {s.currentOccupancy}/{s.capacity})</option>)}
+                    </select>
+                  )}
+                  {distForm.recipientType === "CITIZEN" && (
+                    <select className="input-field" value={distForm.recipientId} onChange={e => setDistForm({ ...distForm, recipientId: +e.target.value })}>
+                      {requests.length === 0 && <option value={0}>-- Không tìm thấy yêu cầu SOS nào --</option>}
+                      {requests.map(r => <option key={r.requestId} value={r.requestId}>SOS #{r.requestId} - {r.description.slice(0, 30)}... ({r.location})</option>)}
+                    </select>
+                  )}
+                </div>
+
                 <div className="md:col-span-2"><label className="block text-sm font-medium mb-1">Ghi chú (Chiến dịch, Đợt cấp phát)</label>
                   <input className="input-field" value={distForm.notes} onChange={e => setDistForm({ ...distForm, notes: e.target.value })} placeholder="VD: Cứu trợ đợt 1 tại Xã A..." /></div>
                 <div className="md:col-span-2 flex gap-2">
