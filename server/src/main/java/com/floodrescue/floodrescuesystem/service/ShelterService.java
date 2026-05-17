@@ -4,6 +4,8 @@ import com.floodrescue.floodrescuesystem.dto.request.CreateShelterRequest;
 import com.floodrescue.floodrescuesystem.dto.response.ShelterResponse;
 import com.floodrescue.floodrescuesystem.entity.Shelter;
 import com.floodrescue.floodrescuesystem.repository.ShelterRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,15 +20,18 @@ public class ShelterService {
         this.shelterRepository = shelterRepository;
     }
 
+    @Cacheable(value = "shelters", key = "'all'")
     public List<ShelterResponse> getAllShelters() {
         return shelterRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
+    @Cacheable(value = "shelters", key = "#id")
     public ShelterResponse getShelterById(Long id) {
         Shelter shelter = shelterRepository.findById(id).orElseThrow(() -> new RuntimeException("Shelter not found"));
         return mapToResponse(shelter);
     }
 
+    @CacheEvict(value = "shelters", allEntries = true)
     public ShelterResponse createShelter(CreateShelterRequest request) {
         Shelter shelter = new Shelter();
         shelter.setName(request.getName());
@@ -41,6 +46,7 @@ public class ShelterService {
         return mapToResponse(saved);
     }
 
+    @CacheEvict(value = "shelters", allEntries = true)
     public ShelterResponse updateShelter(Long id, CreateShelterRequest request) {
         Shelter shelter = shelterRepository.findById(id).orElseThrow(() -> new RuntimeException("Shelter not found"));
         shelter.setName(request.getName());
@@ -55,6 +61,7 @@ public class ShelterService {
         return mapToResponse(saved);
     }
 
+    @CacheEvict(value = "shelters", allEntries = true)
     public void deleteShelter(Long id) {
         shelterRepository.deleteById(id);
     }

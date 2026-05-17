@@ -1,8 +1,9 @@
 package com.floodrescue.floodrescuesystem.dto.response;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class ShelterResponse {
+public class ShelterResponse implements Serializable {
     private Long id;
     private String name;
     private String location;

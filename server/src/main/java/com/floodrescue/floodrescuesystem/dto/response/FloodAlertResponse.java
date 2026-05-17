@@ -1,8 +1,9 @@
 package com.floodrescue.floodrescuesystem.dto.response;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class FloodAlertResponse {
+public class FloodAlertResponse implements Serializable {
     private Long id;
     private String title;
     private String description;

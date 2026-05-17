@@ -1,9 +1,10 @@
 package com.floodrescue.floodrescuesystem.dto.response;
 
 import com.floodrescue.floodrescuesystem.entity.RescueTeam;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class RescueTeamResponse {
+public class RescueTeamResponse implements Serializable {
 
     private Long teamId;
     private String teamName;

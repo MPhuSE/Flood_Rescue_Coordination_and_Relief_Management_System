@@ -5,9 +5,12 @@ import com.floodrescue.floodrescuesystem.dto.request.RefreshTokenRequest;
 import com.floodrescue.floodrescuesystem.dto.request.RegisterRequest;
 import com.floodrescue.floodrescuesystem.dto.response.ApiResponse;
 import com.floodrescue.floodrescuesystem.dto.response.AuthResponse;
+import com.floodrescue.floodrescuesystem.security.JwtService;
 import com.floodrescue.floodrescuesystem.service.AuthService;
+import com.floodrescue.floodrescuesystem.service.TokenBlacklistService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,13 +19,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "Authentication", description = "Đăng ký, đăng nhập, refresh token")
+@Tag(name = "Authentication", description = "Đăng ký, đăng nhập, refresh token, đăng xuất")
 public class AuthController {
 
     private final AuthService authService;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final JwtService jwtService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService,
+                          TokenBlacklistService tokenBlacklistService,
+                          JwtService jwtService) {
         this.authService = authService;
+        this.tokenBlacklistService = tokenBlacklistService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -42,4 +51,19 @@ public class AuthController {
     public ApiResponse<AuthResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         return ApiResponse.success("Refresh token success", authService.refreshToken(request));
     }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Đăng xuất", description = "Blacklist JWT token hiện tại trong Redis")
+    public ApiResponse<String> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwt = authHeader.substring(7);
+            long remainingMs = jwtService.getRemainingExpirationMs(jwt);
+            if (remainingMs > 0) {
+                tokenBlacklistService.blacklistToken(jwt, remainingMs);
+            }
+        }
+        return ApiResponse.success("Logout success", "Token has been invalidated");
+    }
 }
+

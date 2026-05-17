@@ -8,6 +8,8 @@ import com.floodrescue.floodrescuesystem.exception.BadRequestException;
 import com.floodrescue.floodrescuesystem.exception.ResourceNotFoundException;
 import com.floodrescue.floodrescuesystem.repository.RescueTeamRepository;
 import com.floodrescue.floodrescuesystem.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -25,6 +27,7 @@ public class RescueTeamService {
     }
 
     @Transactional
+    @CacheEvict(value = "rescueTeams", allEntries = true)
     public RescueTeamResponse createTeam(CreateRescueTeamRequest request) {
         User leader = userRepository.findById(request.getTeamLeaderId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + request.getTeamLeaderId()));
@@ -42,6 +45,7 @@ public class RescueTeamService {
         return RescueTeamResponse.fromEntity(saved, leader.getFullName());
     }
 
+    @Cacheable(value = "rescueTeams", key = "'all'")
     public List<RescueTeamResponse> getAllTeams() {
         return rescueTeamRepository.findAll().stream()
                 .map(team -> {
@@ -52,6 +56,7 @@ public class RescueTeamService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "rescueTeams", key = "#teamId")
     public RescueTeamResponse getTeamById(Long teamId) {
         RescueTeam team = rescueTeamRepository.findById(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rescue team not found with ID: " + teamId));
@@ -61,6 +66,7 @@ public class RescueTeamService {
     }
 
     @Transactional
+    @CacheEvict(value = "rescueTeams", allEntries = true)
     public RescueTeamResponse updateTeamStatus(Long teamId, String status) {
         RescueTeam team = rescueTeamRepository.findById(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rescue team not found with ID: " + teamId));
@@ -76,6 +82,7 @@ public class RescueTeamService {
     }
 
     @Transactional
+    @CacheEvict(value = "rescueTeams", allEntries = true)
     public void deleteTeam(Long teamId) {
         RescueTeam team = rescueTeamRepository.findById(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rescue team not found with ID: " + teamId));
@@ -83,6 +90,7 @@ public class RescueTeamService {
     }
 
     @Transactional
+    @CacheEvict(value = "rescueTeams", allEntries = true)
     public RescueTeamResponse updateTeamLocation(Long teamId, Double latitude, Double longitude) {
         RescueTeam team = rescueTeamRepository.findById(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rescue team not found with ID: " + teamId));

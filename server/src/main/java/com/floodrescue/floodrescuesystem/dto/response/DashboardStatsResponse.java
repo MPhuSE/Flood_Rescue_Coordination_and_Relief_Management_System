@@ -1,8 +1,9 @@
 package com.floodrescue.floodrescuesystem.dto.response;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class DashboardStatsResponse {
+public class DashboardStatsResponse implements Serializable {
 
     private long totalRequests;
     private long pendingRequests;

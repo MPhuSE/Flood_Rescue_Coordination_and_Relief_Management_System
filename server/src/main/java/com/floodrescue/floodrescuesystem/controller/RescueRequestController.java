@@ -4,10 +4,12 @@ import com.floodrescue.floodrescuesystem.dto.request.AssignTeamRequest;
 import com.floodrescue.floodrescuesystem.dto.request.CreateRescueRequestDTO;
 import com.floodrescue.floodrescuesystem.dto.request.UpdateStatusRequest;
 import com.floodrescue.floodrescuesystem.dto.response.ApiResponse;
+import com.floodrescue.floodrescuesystem.dto.response.NearbyTeamSuggestion;
 import com.floodrescue.floodrescuesystem.dto.response.RescueRequestResponse;
 import com.floodrescue.floodrescuesystem.entity.User;
 import com.floodrescue.floodrescuesystem.exception.ResourceNotFoundException;
 import com.floodrescue.floodrescuesystem.repository.UserRepository;
+import com.floodrescue.floodrescuesystem.service.NearbyTeamService;
 import com.floodrescue.floodrescuesystem.service.NotificationService;
 import com.floodrescue.floodrescuesystem.service.RescueRequestService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,13 +28,16 @@ public class RescueRequestController {
     private final RescueRequestService rescueRequestService;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final NearbyTeamService nearbyTeamService;
 
     public RescueRequestController(RescueRequestService rescueRequestService,
                                    UserRepository userRepository,
-                                   NotificationService notificationService) {
+                                   NotificationService notificationService,
+                                   NearbyTeamService nearbyTeamService) {
         this.rescueRequestService = rescueRequestService;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.nearbyTeamService = nearbyTeamService;
     }
 
     // ========== CITIZEN APIs ==========
@@ -88,6 +93,27 @@ public class RescueRequestController {
     @Operation(summary = "Lọc yêu cầu theo trạng thái", description = "Lọc yêu cầu theo: PENDING, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED, REJECTED")
     public ApiResponse<List<RescueRequestResponse>> getByStatus(@PathVariable String status) {
         return ApiResponse.success("Requests by status", rescueRequestService.getRescueRequestsByStatus(status));
+    }
+
+    /**
+     * API gợi ý đội cứu hộ gần nhất.
+     * Coordinator chọn 1 yêu cầu cứu hộ → hệ thống tính toán và đưa ra 3-5 đội ACTIVE gần nhất.
+     * Sử dụng Redis Geo (nhanh) + PostgreSQL Haversine (fallback).
+     */
+    @GetMapping("/{id}/nearby-teams")
+    @Operation(
+            summary = "Gợi ý đội cứu hộ gần nhất",
+            description = "Hệ thống tự động tính toán bằng Redis Geo + Haversine và đưa ra " +
+                    "danh sách 3-5 đội cứu hộ ACTIVE gần nạn nhân nhất, sắp xếp theo khoảng cách tăng dần."
+    )
+    public ApiResponse<List<NearbyTeamSuggestion>> getNearbyTeams(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "5") Integer limit) {
+        List<NearbyTeamSuggestion> suggestions = nearbyTeamService.findNearestTeams(id, limit);
+        return ApiResponse.success(
+                "Tìm thấy " + suggestions.size() + " đội cứu hộ gần nhất",
+                suggestions
+        );
     }
 
     @PatchMapping("/{id}/assign")

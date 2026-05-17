@@ -7,6 +7,7 @@ import com.floodrescue.floodrescuesystem.entity.*;
 import com.floodrescue.floodrescuesystem.exception.BadRequestException;
 import com.floodrescue.floodrescuesystem.exception.ResourceNotFoundException;
 import com.floodrescue.floodrescuesystem.repository.*;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -111,6 +112,7 @@ public class AdminService {
 
     // ========== Dashboard Statistics ==========
 
+    @Cacheable(value = "dashboard", key = "'stats'")
     public DashboardStatsResponse getDashboardStats() {
         DashboardStatsResponse stats = new DashboardStatsResponse();
 
