@@ -75,3 +75,14 @@ npm install
 npm run dev
 ```
 *Giao diện Web sẽ chạy tại cổng: `http://localhost:5173`*
+
+## Cloudinary
+
+Backend uploads rescue request images to Cloudinary through `/api/uploads/images`.
+Set these environment variables before starting the server:
+
+```bash
+set CLOUDINARY_CLOUD_NAME=your_cloud_name
+set CLOUDINARY_API_KEY=your_api_key
+set CLOUDINARY_API_SECRET=your_api_secret
+```

@@ -1,18 +1,8 @@
 import { useEffect, useState } from "react";
-import { Shield, User, UserCheck, ShieldAlert, Zap } from "lucide-react";
+import { User, Zap } from "lucide-react";
 import { adminApi } from "../services/apiService";
 import { useUserStore } from "../hooks/useUserStore";
-
-type UserProfile = {
-  id: number;
-  username: string;
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  role: string;
-  status: string;
-  createdAt: string;
-};
+import type { UserProfile } from "../types/user";
 
 const roleColors: Record<string, string> = {
   ADMIN: "bg-red-100 text-red-700 border-red-200",
@@ -80,12 +70,12 @@ export function UsersPage() {
                 </td>
                 <td className="px-4 py-3">
                   <p className="text-ink">{u.email}</p>
-                  <p className="text-xs text-slate">{u.phoneNumber}</p>
+                  <p className="text-xs text-slate">{u.phone || "-"}</p>
                 </td>
                 <td className="px-4 py-3">
                   <select 
-                    className={`text-xs font-semibold rounded px-2 py-1 outline-none border ${roleColors[u.role] || "bg-white"} ${u.id === myProfile?.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    value={u.role}
+                    className={`text-xs font-semibold rounded px-2 py-1 outline-none border ${roleColors[u.role || ""] || "bg-white"} ${u.id === myProfile?.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    value={u.role ?? ""}
                     disabled={u.id === myProfile?.id}
                     onChange={(e) => handleRoleChange(u.id, e.target.value)}
                   >
@@ -99,7 +89,7 @@ export function UsersPage() {
                 <td className="px-4 py-3">
                   <select 
                     className={`text-xs font-medium rounded px-2 py-1 outline-none border ${u.status === 'ACTIVE' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'} ${u.id === myProfile?.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    value={u.status}
+                    value={u.status ?? ""}
                     disabled={u.id === myProfile?.id}
                     onChange={(e) => handleStatusChange(u.id, e.target.value)}
                   >

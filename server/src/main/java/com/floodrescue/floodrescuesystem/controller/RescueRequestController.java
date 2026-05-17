@@ -10,7 +10,6 @@ import com.floodrescue.floodrescuesystem.entity.User;
 import com.floodrescue.floodrescuesystem.exception.ResourceNotFoundException;
 import com.floodrescue.floodrescuesystem.repository.UserRepository;
 import com.floodrescue.floodrescuesystem.service.NearbyTeamService;
-import com.floodrescue.floodrescuesystem.service.NotificationService;
 import com.floodrescue.floodrescuesystem.service.RescueRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,16 +26,13 @@ public class RescueRequestController {
 
     private final RescueRequestService rescueRequestService;
     private final UserRepository userRepository;
-    private final NotificationService notificationService;
     private final NearbyTeamService nearbyTeamService;
 
     public RescueRequestController(RescueRequestService rescueRequestService,
                                    UserRepository userRepository,
-                                   NotificationService notificationService,
                                    NearbyTeamService nearbyTeamService) {
         this.rescueRequestService = rescueRequestService;
         this.userRepository = userRepository;
-        this.notificationService = notificationService;
         this.nearbyTeamService = nearbyTeamService;
     }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, MapPin, CheckCircle, Clock, ArrowRight, UserPlus, XCircle, Navigation, Radio, HeartHandshake } from "lucide-react";
-import { rescueApi, teamApi } from "../services/apiService";
+import { Plus, Search, MapPin, CheckCircle, ArrowRight, UserPlus, XCircle, Navigation, Radio, HeartHandshake } from "lucide-react";
+import { rescueApi, teamApi, uploadApi } from "../services/apiService";
 import { useUserStore } from "../hooks/useUserStore";
 import type { RescueRequest, CreateRescueRequest, RescueTeam } from "../types/rescue";
 
@@ -43,6 +43,9 @@ export function RescueRequestsPage() {
   const [showForm, setShowForm] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState<number | null>(null);
   const [form, setForm] = useState<CreateRescueRequest>({ description: "", location: "", latitude: 0, longitude: 0, urgencyLevel: "MEDIUM", image: "", numberOfPeople: 1 });
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [sosActive, setSosActive] = useState<Record<number, boolean>>({});
   const [teamLocationActive, setTeamLocationActive] = useState(false); // FR-3.3 Auto tracking
   const [loading, setLoading] = useState(true);
@@ -68,20 +71,28 @@ export function RescueRequestsPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!form.description || !form.location || form.latitude === 0) {
-      alert("Vui lòng điền đầy đủ: Mô tả, Vị trí và bấm nút lấy Vĩ độ/Kinh độ GPS!");
+      alert("Vui long dien day du thong tin va lay toa do GPS.");
       return;
     }
-    try { 
-      await rescueApi.create(form); 
-      setShowForm(false); 
+    try {
+      setUploadingImages(true);
+      const uploadedImages = selectedImages.length > 0
+        ? await uploadApi.uploadImages(selectedImages, "rescue-requests")
+        : null;
+
+      await rescueApi.create({ ...form, image: uploadedImages?.joinedUrls || "" });
+      setShowForm(false);
       setForm({ description: "", location: "", latitude: 0, longitude: 0, urgencyLevel: "MEDIUM", image: "", numberOfPeople: 1 });
-      alert("Gửi yêu cầu cứu hộ thành công!");
-      load(); 
+      setSelectedImages([]);
+      setImagePreviewUrls([]);
+      alert("Gui yeu cau cuu ho thanh cong!");
+      load();
     } catch (err: any) {
-      alert("Lỗi khi gửi yêu cầu. Có thể nội dung quá dài hoặc lỗi kết nối. Chi tiết: " + (err.response?.data?.message || err.message));
+      alert("Loi khi gui yeu cau. Chi tiet: " + (err.response?.data?.message || err.message));
+    } finally {
+      setUploadingImages(false);
     }
   }
-
   function handleGetLocation() {
     if (!navigator.geolocation) {
       alert("Trình duyệt của bạn không hỗ trợ định vị GPS.");
@@ -273,45 +284,24 @@ export function RescueRequestsPage() {
               <input type="number" min="1" className="input-field" value={form.numberOfPeople} onChange={e => setForm({ ...form, numberOfPeople: +e.target.value })} />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-ink mb-1">Hình ảnh đính kèm (có thể chọn nhiều ảnh)</label>
+              <label className="block text-sm font-medium text-ink mb-1">Hinh anh dinh kem (co the chon nhieu anh)</label>
               <input type="file" accept="image/*" multiple className="input-field file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-tint-mint file:text-brand-green hover:file:bg-brand-green hover:file:text-white"
                 onChange={(e) => {
                   const files = e.target.files;
                   if (!files || files.length === 0) return;
-                  const newImages: string[] = [];
-                  let processed = 0;
-                  Array.from(files).forEach((file) => {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      const img = new Image();
-                      img.onload = () => {
-                        const canvas = document.createElement("canvas");
-                        let { width, height } = img;
-                        if (width > 800) { height = Math.round((height * 800) / width); width = 800; }
-                        if (height > 800) { width = Math.round((width * 800) / height); height = 800; }
-                        canvas.width = width; canvas.height = height;
-                        canvas.getContext("2d")?.drawImage(img, 0, 0, width, height);
-                        newImages.push(canvas.toDataURL("image/jpeg", 0.7));
-                        processed++;
-                        if (processed === files.length) {
-                          const current = form.image ? form.image.split("|||") : [];
-                          setForm({ ...form, image: [...current, ...newImages].join("|||") });
-                        }
-                      };
-                      img.src = event.target?.result as string;
-                    };
-                    reader.readAsDataURL(file);
-                  });
+                  const nextFiles = [...selectedImages, ...Array.from(files)];
+                  setSelectedImages(nextFiles);
+                  setImagePreviewUrls(nextFiles.map(file => URL.createObjectURL(file)));
                 }} />
-              {form.image && (
+              {imagePreviewUrls.length > 0 && (
                 <div className="mt-2 flex gap-2 flex-wrap">
-                  {form.image.split("|||").map((img, i) => (
+                  {imagePreviewUrls.map((img, i) => (
                     <div key={i} className="relative">
                        <img src={img} alt="Preview" className="w-16 h-16 object-cover rounded shadow border border-hairline" />
                        <button type="button" onClick={() => {
-                          const imgs = form.image.split("|||");
-                          imgs.splice(i, 1);
-                          setForm({ ...form, image: imgs.join("|||") });
+                          const nextFiles = selectedImages.filter((_, index) => index !== i);
+                          setSelectedImages(nextFiles);
+                          setImagePreviewUrls(nextFiles.map(file => URL.createObjectURL(file)));
                        }} className="absolute -top-2 -right-2 bg-semantic-error text-white rounded-full p-0.5 shadow-sm hover:scale-110 transition-transform">
                          <XCircle size={14} />
                        </button>
@@ -334,7 +324,7 @@ export function RescueRequestsPage() {
               </div>
             </div>
             <div className="md:col-span-2 flex gap-2">
-              <button type="submit" className="btn-primary">Gửi yêu cầu</button>
+              <button type="submit" className="btn-primary" disabled={uploadingImages}>{uploadingImages ? "Dang tai anh..." : "Gui yeu cau"}</button>
               <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Hủy</button>
             </div>
           </form>
@@ -544,3 +534,6 @@ export function RescueRequestsPage() {
     </div>
   );
 }
+
+
+

@@ -24,6 +24,18 @@ export const rescueApi = {
   delete: (id: number) => http.delete<ApiResponse<void>>(`/rescue-requests/${id}`),
 };
 
+export const uploadApi = {
+  uploadImages: (files: File[], folder = "rescue-requests") => {
+    const formData = new FormData();
+    files.forEach(file => formData.append("files", file));
+    formData.append("folder", folder);
+
+    return http.post<ApiResponse<{ urls: string[]; joinedUrls: string }>>("/uploads/images", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then(r => r.data.data);
+  },
+};
+
 // ─── Teams ───
 export const teamApi = {
   getAll: () => http.get<ApiResponse<RescueTeam[]>>("/rescue-teams").then(r => r.data.data),

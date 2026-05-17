@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { LifeBuoy, Users, Truck, Package, Shield, AlertTriangle, TrendingUp, Activity, HeartHandshake, CheckCircle, Zap } from "lucide-react";
 import { adminApi, rescueApi, alertApi, reliefApi } from "../services/apiService";
 import { useUserStore } from "../hooks/useUserStore";
-import type { DashboardStats, RescueRequest, FloodAlert, ReliefDistribution } from "../types/rescue";
+import type { DashboardStats, RescueRequest, FloodAlert } from "../types/rescue";
 
 const statCards = [
   { key: "totalRescueRequests", label: "Yêu cầu cứu hộ", icon: <LifeBuoy size={20} />, color: "bg-tint-lavender text-primary" },

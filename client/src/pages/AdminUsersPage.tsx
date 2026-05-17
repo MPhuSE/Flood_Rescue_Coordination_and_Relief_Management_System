@@ -84,7 +84,7 @@ export function AdminUsersPage() {
                   <td className="px-4 py-3">
                     <select 
                       className={`text-xs font-semibold rounded px-2 py-1 outline-none border ${roleBadge[u.role || ""] || "badge-soft-purple"}`}
-                      value={u.role}
+                      value={u.role ?? ""}
                       onChange={async (e) => {
                         try {
                           await adminApi.updateRole(u.id, e.target.value);
@@ -100,7 +100,7 @@ export function AdminUsersPage() {
                   <td className="px-4 py-3">
                     <select 
                       className={`text-xs font-medium rounded px-2 py-1 outline-none border ${u.status === "ACTIVE" ? "badge-green" : "badge-red"}`}
-                      value={u.status}
+                      value={u.status ?? ""}
                       onChange={async (e) => {
                         try {
                           await adminApi.updateStatus(u.id, e.target.value);
