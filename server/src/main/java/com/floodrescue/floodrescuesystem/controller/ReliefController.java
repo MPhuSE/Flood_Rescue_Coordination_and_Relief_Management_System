@@ -28,6 +28,7 @@ public class ReliefController {
     // ========== RELIEF ITEMS (Inventory) ==========
 
     @PostMapping("/items")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Thêm hàng cứu trợ", description = "Thêm mặt hàng cứu trợ mới vào kho")
     public ApiResponse<ReliefItemResponse> createItem(@Valid @RequestBody CreateReliefItemRequest request) {
         return ApiResponse.success("Relief item created", reliefService.createItem(request));
@@ -58,6 +59,7 @@ public class ReliefController {
     }
 
     @PutMapping("/items/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Cập nhật hàng cứu trợ", description = "Cập nhật thông tin mặt hàng và tồn kho")
     public ApiResponse<ReliefItemResponse> updateItem(
             @PathVariable Long id,
@@ -66,6 +68,7 @@ public class ReliefController {
     }
 
     @DeleteMapping("/items/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Xóa hàng cứu trợ", description = "Xóa mặt hàng cứu trợ khỏi kho")
     public ApiResponse<Void> deleteItem(@PathVariable Long id) {
         reliefService.deleteItem(id);
@@ -75,6 +78,7 @@ public class ReliefController {
     // ========== RELIEF DISTRIBUTION ==========
 
     @PostMapping("/distributions")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'RESCUER')")
     @Operation(summary = "Ghi nhận phân phối", description = "Ghi nhận phân phối hàng cứu trợ (tự động trừ tồn kho)")
     public ApiResponse<DistributionResponse> createDistribution(
             Authentication auth,

@@ -30,16 +30,19 @@ public class ShelterController {
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ApiResponse<ShelterResponse> createShelter(@Valid @RequestBody CreateShelterRequest request) {
         return ApiResponse.success("Created shelter", shelterService.createShelter(request));
     }
 
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ApiResponse<ShelterResponse> updateShelter(@PathVariable Long id, @Valid @RequestBody CreateShelterRequest request) {
         return ApiResponse.success("Updated shelter", shelterService.updateShelter(id, request));
     }
 
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ApiResponse<Void> deleteShelter(@PathVariable Long id) {
         shelterService.deleteShelter(id);
         return ApiResponse.success("Deleted shelter", null);

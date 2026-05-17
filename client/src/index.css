@@ -77,7 +77,7 @@
   }
 
   /* Badge Styles */
-  .badge-purple { @apply px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold uppercase tracking-wider; }
+  .badge-purple { @apply px-2 py-0.5 rounded-full bg-tint-lavender text-primary text-[10px] font-bold uppercase tracking-wider; }
   .badge-green { @apply px-2 py-0.5 rounded-full bg-tint-mint text-brand-green text-[10px] font-bold uppercase tracking-wider; }
   .badge-orange { @apply px-2 py-0.5 rounded-full bg-tint-peach text-brand-orange text-[10px] font-bold uppercase tracking-wider; }
   .badge-red { @apply px-2 py-0.5 rounded-full bg-tint-rose text-error text-[10px] font-bold uppercase tracking-wider; }

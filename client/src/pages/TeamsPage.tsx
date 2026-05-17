@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Users, Phone, MapPin, User as UserIcon } from "lucide-react";
+import { Plus, Users, Phone, MapPin, User as UserIcon, Edit, Trash2 } from "lucide-react";
 import { teamApi, adminApi } from "../services/apiService";
 import type { RescueTeam } from "../types/rescue";
 import type { UserProfile } from "../types/user";
@@ -15,6 +15,17 @@ export function TeamsPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
+    teamName: "",
+    memberCount: 5,
+    contactPhone: "",
+    status: "ACTIVE",
+    currentLocation: "",
+    description: "",
+    teamLeaderId: ""
+  });
+
+  const [editingTeam, setEditingTeam] = useState<RescueTeam | null>(null);
+  const [editForm, setEditForm] = useState({
     teamName: "",
     memberCount: 5,
     contactPhone: "",
@@ -57,6 +68,50 @@ export function TeamsPage() {
     } catch (err) {
       console.error("Create team failed:", err);
       alert("Tạo đội thất bại. Vui lòng kiểm tra lại thông tin.");
+    }
+  }
+
+  function handleEditClick(t: RescueTeam) {
+    setEditingTeam(t);
+    setEditForm({
+      teamName: t.teamName,
+      memberCount: t.memberCount,
+      contactPhone: t.contactPhone,
+      status: t.status,
+      currentLocation: t.currentLocation,
+      description: t.description || "",
+      teamLeaderId: t.teamLeaderId ? t.teamLeaderId.toString() : ""
+    });
+  }
+
+  async function handleUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingTeam) return;
+    if (!editForm.teamLeaderId) {
+      alert("Vui lòng chọn đội trưởng");
+      return;
+    }
+    try {
+      await teamApi.update(editingTeam.teamId, {
+        ...editForm,
+        teamLeaderId: parseInt(editForm.teamLeaderId)
+      });
+      setEditingTeam(null);
+      load();
+    } catch (err) {
+      console.error("Update team failed:", err);
+      alert("Cập nhật đội thất bại. Vui lòng kiểm tra lại.");
+    }
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm("Bạn có chắc chắn muốn xóa đội cứu hộ này không?")) return;
+    try {
+      await teamApi.delete(id);
+      load();
+    } catch (err) {
+      console.error("Delete team failed:", err);
+      alert("Xóa đội cứu hộ thất bại.");
     }
   }
 
@@ -120,23 +175,102 @@ export function TeamsPage() {
         {teams.length === 0 ? (
           <div className="md:col-span-3 card p-8 text-center text-slate">Chưa có đội cứu hộ nào</div>
         ) : teams.map(team => (
-          <div key={team.teamId} className="card p-5 hover:shadow-mockup transition-all duration-200">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-tint-sky flex items-center justify-center">
-                <Users size={18} className="text-link" />
+          <div key={team.teamId} className="card p-5 hover:shadow-mockup transition-all duration-200 flex flex-col justify-between">
+            <div>
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-tint-sky flex items-center justify-center">
+                  <Users size={18} className="text-link" />
+                </div>
+                <select 
+                  className={`text-xs border border-hairline rounded px-1 py-0.5 outline-none focus:border-primary font-semibold ${statusBadge[team.status] || "badge-soft-purple"}`}
+                  value={team.status}
+                  onChange={async (e) => {
+                    try {
+                      await teamApi.updateStatus(team.teamId, e.target.value);
+                      load();
+                    } catch {
+                      alert("Cập nhật trạng thái thất bại");
+                    }
+                  }}
+                >
+                  <option value="ACTIVE" className="text-ink bg-white">Hoạt động</option>
+                  <option value="INACTIVE" className="text-ink bg-white">Không HĐ</option>
+                  <option value="ON_DUTY" className="text-ink bg-white">Làm nhiệm vụ</option>
+                </select>
               </div>
-              <span className={statusBadge[team.status] || "badge-soft-purple"}>{team.status}</span>
+              <h3 className="text-sm font-semibold text-ink mb-2">{team.teamName}</h3>
+              <div className="space-y-1.5 text-xs text-slate">
+                <p className="flex items-center gap-2"><UserIcon size={12} className="text-primary" /> Đội trưởng: <span className="font-medium text-ink">{team.teamLeaderName || "---"}</span></p>
+                <p className="flex items-center gap-2"><Users size={12} /> {team.memberCount} thành viên</p>
+                <p className="flex items-center gap-2"><Phone size={12} /> {team.contactPhone || "---"}</p>
+                <p className="flex items-center gap-2"><MapPin size={12} /> {team.currentLocation || "---"}</p>
+                {team.description && <p className="text-[11px] italic mt-1 text-slate border-l-2 border-hairline pl-2">{team.description}</p>}
+              </div>
             </div>
-            <h3 className="text-sm font-semibold text-ink mb-2">{team.teamName}</h3>
-            <div className="space-y-1.5 text-xs text-slate">
-              <p className="flex items-center gap-2"><UserIcon size={12} className="text-primary" /> Đội trưởng: <span className="font-medium text-ink">{team.teamLeaderName || "---"}</span></p>
-              <p className="flex items-center gap-2"><Users size={12} /> {team.memberCount} thành viên</p>
-              <p className="flex items-center gap-2"><Phone size={12} /> {team.contactPhone || "---"}</p>
-              <p className="flex items-center gap-2"><MapPin size={12} /> {team.currentLocation || "---"}</p>
+            
+            <div className="border-t border-hairline pt-3 mt-4 flex justify-end gap-2">
+              <button 
+                onClick={() => handleEditClick(team)} 
+                className="btn-secondary !py-1 !px-2 text-xs border-primary text-primary hover:bg-tint-lavender flex items-center gap-1"
+                title="Chỉnh sửa đội"
+              >
+                <Edit size={12} /> Sửa
+              </button>
+              <button 
+                onClick={() => handleDelete(team.teamId)} 
+                className="btn-secondary !py-1 !px-2 text-xs border-error text-error hover:bg-tint-rose flex items-center gap-1"
+                title="Xóa đội"
+              >
+                <Trash2 size={12} /> Xóa
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Edit Team Modal */}
+      {editingTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="card w-full max-w-lg p-6 animate-fade-in bg-white dark:bg-zinc-900 border border-hairline shadow-xl animate-slide-up">
+            <h3 className="text-sm font-semibold text-ink mb-4">Chỉnh sửa đội cứu hộ</h3>
+            <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Tên đội</label>
+                <input className="input-field" value={editForm.teamName} onChange={e => setEditForm({ ...editForm, teamName: e.target.value })} required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Đội trưởng</label>
+                <select className="input-field" value={editForm.teamLeaderId} onChange={e => setEditForm({ ...editForm, teamLeaderId: e.target.value })} required>
+                  <option value="">-- Chọn đội trưởng --</option>
+                  {users.filter(u => u.role === "RESCUER").map(u => (
+                    <option key={u.id} value={u.id}>{u.fullName} ({u.username})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Số thành viên</label>
+                <input type="number" className="input-field" value={editForm.memberCount} onChange={e => setEditForm({ ...editForm, memberCount: +e.target.value })} required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">SĐT liên hệ</label>
+                <input className="input-field" value={editForm.contactPhone} onChange={e => setEditForm({ ...editForm, contactPhone: e.target.value })} required />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-1">Vị trí hiện tại</label>
+                <input className="input-field" value={editForm.currentLocation} onChange={e => setEditForm({ ...editForm, currentLocation: e.target.value })} required />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-1">Mô tả</label>
+                <textarea className="input-field" value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value || "" })} rows={2} />
+              </div>
+              <div className="md:col-span-2 flex justify-end gap-2 mt-2 border-t border-hairline pt-3">
+                <button type="submit" className="btn-primary">Lưu thay đổi</button>
+                <button type="button" onClick={() => setEditingTeam(null)} className="btn-secondary">Hủy</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

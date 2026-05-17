@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, MapPin, CheckCircle, ArrowRight, UserPlus, XCircle, Navigation, Radio, HeartHandshake } from "lucide-react";
+import { Plus, Search, MapPin, CheckCircle, ArrowRight, UserPlus, XCircle, Navigation, Radio, HeartHandshake, Eye, UserCheck } from "lucide-react";
 import { rescueApi, teamApi, uploadApi } from "../services/apiService";
 import { useUserStore } from "../hooks/useUserStore";
 import type { RescueRequest, CreateRescueRequest, RescueTeam } from "../types/rescue";
@@ -49,10 +49,11 @@ export function RescueRequestsPage() {
   const [sosActive, setSosActive] = useState<Record<number, boolean>>({});
   const [teamLocationActive, setTeamLocationActive] = useState(false); // FR-3.3 Auto tracking
   const [loading, setLoading] = useState(true);
+  const [selectedRequestDetails, setSelectedRequestDetails] = useState<RescueRequest | null>(null);
 
   useEffect(() => { 
     load(); 
-    if (isStaff) teamApi.getAll().then(setTeams).catch(() => {});
+    teamApi.getAll().then(setTeams).catch(() => {});
   }, [isCitizen, isStaff]);
 
   async function load() {
@@ -419,6 +420,11 @@ export function RescueRequestsPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex flex-wrap items-center justify-end gap-2 max-w-[150px] ml-auto">
+                      <button onClick={() => setSelectedRequestDetails(req)} 
+                        className="btn-secondary !py-1 !px-2 text-xs border-primary text-primary hover:bg-tint-lavender flex items-center gap-1"
+                        title="Xem chi tiết yêu cầu">
+                        <Eye size={14} /> Chi tiết
+                      </button>
                       {isCitizen && ["PENDING", "ASSIGNED", "IN_PROGRESS"].includes(r.status) && (
                         <button onClick={() => toggleSos(r.requestId)} 
                           className={`btn-secondary !py-1 !px-2 text-xs flex items-center gap-1 ${isSos ? 'bg-error text-white border-error animate-pulse' : 'text-error border-error'}`}>
@@ -527,6 +533,119 @@ export function RescueRequestsPage() {
             </div>
             <div className="mt-6">
               <button onClick={() => setShowAssignModal(null)} className="btn-secondary w-full">Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detailed View Modal */}
+      {selectedRequestDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="card w-full max-w-2xl p-6 animate-fade-in bg-white dark:bg-zinc-900 border border-hairline shadow-xl max-h-[90vh] overflow-y-auto space-y-6">
+            <div className="flex items-center justify-between border-b border-hairline pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-ink">Yêu cầu cứu hộ #{selectedRequestDetails.requestId}</h3>
+                <p className="text-xs text-slate mt-0.5">Thời gian gửi: {selectedRequestDetails.createdTime ? new Date(selectedRequestDetails.createdTime).toLocaleString("vi-VN") : "Đang cập nhật"}</p>
+              </div>
+              <div className="flex gap-2">
+                <span className={urgencyBadge[selectedRequestDetails.urgencyLevel] || "badge-soft-purple"}>
+                  {selectedRequestDetails.urgencyLevel}
+                </span>
+                <span className={statusBadge[selectedRequestDetails.status] || "badge-soft-purple"}>
+                  {selectedRequestDetails.status}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-xs font-semibold text-slate uppercase tracking-wider">Mô tả tình huống</h4>
+                  <p className="text-sm text-ink mt-1 bg-surface-soft p-3 rounded border border-hairline whitespace-pre-wrap leading-relaxed">{selectedRequestDetails.description}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate uppercase tracking-wider">Số người cần cứu</h4>
+                    <p className="text-sm text-ink font-medium mt-1">{(selectedRequestDetails as any).numberOfPeople || 1} người</p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate uppercase tracking-wider">Mã người dùng</h4>
+                    <p className="text-sm text-ink font-medium mt-1">#{selectedRequestDetails.userId}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-semibold text-slate uppercase tracking-wider">Vị trí thực địa</h4>
+                  <p className="text-sm text-ink mt-1 flex items-start gap-1">
+                    <MapPin size={16} className="text-brand-green shrink-0 mt-0.5" />
+                    <span>{selectedRequestDetails.location}</span>
+                  </p>
+                  {selectedRequestDetails.latitude && selectedRequestDetails.longitude && (
+                    <div className="mt-2 flex gap-2">
+                      <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedRequestDetails.latitude},${selectedRequestDetails.longitude}`} target="_blank" rel="noreferrer"
+                        className="btn-secondary !py-1 !px-2.5 text-xs border-link text-link hover:bg-link hover:text-white flex items-center gap-1">
+                        <Navigation size={12} /> Dẫn đường (Google Maps)
+                      </a>
+                      <span className="text-[10px] text-slate self-center">
+                        GPS: {selectedRequestDetails.latitude.toFixed(6)}, {selectedRequestDetails.longitude.toFixed(6)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-xs font-semibold text-slate uppercase tracking-wider">Hình ảnh đính kèm</h4>
+                  {selectedRequestDetails.image ? (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {selectedRequestDetails.image.split("|||").map((img, i) => (
+                        <a key={i} href={img} target="_blank" rel="noreferrer" className="relative group overflow-hidden rounded border border-hairline shadow-sm hover:border-primary block">
+                          <img src={img} alt={`Minh chứng ${i+1}`} className="w-full h-32 object-cover transition-transform group-hover:scale-105" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-[10px] text-white font-medium bg-black/60 px-2 py-0.5 rounded">Xem ảnh lớn</span>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate italic mt-2 bg-surface p-4 text-center rounded border border-hairline border-dashed">Không có hình ảnh đính kèm</p>
+                  )}
+                </div>
+
+                <div className="border-t border-hairline pt-4">
+                  <h4 className="text-xs font-semibold text-slate uppercase tracking-wider mb-2">Đội cứu hộ đảm nhận</h4>
+                  {(() => {
+                    const assignedTeam = teams.find(t => t.teamId === selectedRequestDetails.assignedTeamId);
+                    if (selectedRequestDetails.assignedTeamName || assignedTeam) {
+                      return (
+                        <div className="bg-primary/5 border border-primary/20 rounded p-3 text-xs space-y-1.5">
+                          <p className="font-semibold text-primary flex items-center gap-1">
+                            <UserCheck size={14} /> {selectedRequestDetails.assignedTeamName || assignedTeam?.teamName}
+                          </p>
+                          {assignedTeam && (
+                            <>
+                              <p className="text-slate">Số lượng thành viên: {assignedTeam.memberCount} người</p>
+                              <p className="text-slate">Số điện thoại liên hệ: {assignedTeam.contactPhone}</p>
+                              {assignedTeam.vehicleNames && assignedTeam.vehicleNames.length > 0 && (
+                                <p className="text-brand-teal font-medium">🚛 Phương tiện: {assignedTeam.vehicleNames.join(", ")}</p>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    }
+                    return (
+                      <p className="text-xs text-slate italic bg-surface p-4 text-center rounded border border-hairline border-dashed">Chưa có đội cứu hộ nào được phân công</p>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-hairline pt-4 flex justify-end">
+              <button onClick={() => setSelectedRequestDetails(null)} className="btn-secondary min-w-[100px]">Đóng</button>
             </div>
           </div>
         </div>

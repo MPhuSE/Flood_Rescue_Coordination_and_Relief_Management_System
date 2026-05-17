@@ -83,6 +83,26 @@ public class RescueTeamService {
 
     @Transactional
     @CacheEvict(value = "rescueTeams", allEntries = true)
+    public RescueTeamResponse updateTeam(Long teamId, CreateRescueTeamRequest request) {
+        RescueTeam team = rescueTeamRepository.findById(teamId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rescue team not found with ID: " + teamId));
+        
+        User leader = userRepository.findById(request.getTeamLeaderId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + request.getTeamLeaderId()));
+
+        team.setTeamName(request.getTeamName());
+        team.setDescription(request.getDescription());
+        team.setTeamLeaderId(request.getTeamLeaderId());
+        team.setMemberCount(request.getMemberCount() != null ? request.getMemberCount() : 1);
+        team.setContactPhone(request.getContactPhone());
+        team.setCurrentLocation(request.getCurrentLocation());
+
+        RescueTeam saved = rescueTeamRepository.save(team);
+        return RescueTeamResponse.fromEntity(saved, leader.getFullName());
+    }
+
+    @Transactional
+    @CacheEvict(value = "rescueTeams", allEntries = true)
     public void deleteTeam(Long teamId) {
         RescueTeam team = rescueTeamRepository.findById(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rescue team not found with ID: " + teamId));

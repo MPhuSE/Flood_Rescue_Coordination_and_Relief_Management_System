@@ -74,18 +74,21 @@ public class RescueRequestController {
     // ========== COORDINATOR APIs ==========
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR', 'MANAGER', 'RESCUER')")
     @Operation(summary = "Lấy tất cả yêu cầu cứu hộ", description = "Coordinator/Admin xem tất cả yêu cầu")
     public ApiResponse<List<RescueRequestResponse>> getAllRequests() {
         return ApiResponse.success("All rescue requests retrieved", rescueRequestService.getAllRescueRequests());
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR', 'MANAGER', 'RESCUER', 'CITIZEN')")
     @Operation(summary = "Xem chi tiết yêu cầu", description = "Xem thông tin chi tiết 1 yêu cầu cứu hộ")
     public ApiResponse<RescueRequestResponse> getRequestById(@PathVariable Long id) {
         return ApiResponse.success("Rescue request retrieved", rescueRequestService.getRescueRequestById(id));
     }
 
     @GetMapping("/status/{status}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR', 'MANAGER', 'RESCUER')")
     @Operation(summary = "Lọc yêu cầu theo trạng thái", description = "Lọc yêu cầu theo: PENDING, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED, REJECTED")
     public ApiResponse<List<RescueRequestResponse>> getByStatus(@PathVariable String status) {
         return ApiResponse.success("Requests by status", rescueRequestService.getRescueRequestsByStatus(status));
@@ -97,6 +100,7 @@ public class RescueRequestController {
      * Sử dụng Redis Geo (nhanh) + PostgreSQL Haversine (fallback).
      */
     @GetMapping("/{id}/nearby-teams")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")
     @Operation(
             summary = "Gợi ý đội cứu hộ gần nhất",
             description = "Hệ thống tự động tính toán bằng Redis Geo + Haversine và đưa ra " +
@@ -113,6 +117,7 @@ public class RescueRequestController {
     }
 
     @PatchMapping("/{id}/assign")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")
     @Operation(summary = "Giao yêu cầu cho đội cứu hộ", description = "Coordinator phân công đội cứu hộ xử lý yêu cầu")
     public ApiResponse<RescueRequestResponse> assignTeam(
             @PathVariable Long id,
@@ -122,6 +127,7 @@ public class RescueRequestController {
     }
 
     @PatchMapping("/{id}/status")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR', 'RESCUER')")
     @Operation(summary = "Cập nhật trạng thái yêu cầu", description = "Coordinator cập nhật trạng thái xử lý yêu cầu")
     public ApiResponse<RescueRequestResponse> updateStatus(
             @PathVariable Long id,
@@ -131,6 +137,7 @@ public class RescueRequestController {
     }
 
     @PatchMapping("/{id}/urgency")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")
     @Operation(summary = "Cập nhật mức độ khẩn cấp", description = "Coordinator thay đổi mức độ khẩn cấp của yêu cầu")
     public ApiResponse<RescueRequestResponse> updateUrgency(
             @PathVariable Long id,
@@ -140,6 +147,7 @@ public class RescueRequestController {
     }
 
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR', 'CITIZEN')")
     @Operation(summary = "Cập nhật yêu cầu cứu hộ", description = "Cập nhật thông tin yêu cầu cứu hộ")
     public ApiResponse<RescueRequestResponse> updateRequest(
             @PathVariable Long id,
@@ -148,6 +156,7 @@ public class RescueRequestController {
     }
 
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")
     @Operation(summary = "Xóa yêu cầu cứu hộ", description = "Xóa yêu cầu cứu hộ")
     public ApiResponse<Void> deleteRequest(@PathVariable Long id) {
         rescueRequestService.deleteRescueRequest(id);

@@ -59,3 +59,18 @@ export type DashboardStats = {
   totalAlerts: number; requestsByStatus: Record<string, number>;
   requestsByUrgency: Record<string, number>;
 };
+
+export type NearbyTeamSuggestion = {
+  teamId: number;
+  teamName: string;
+  teamLeaderName: string;
+  memberCount: number;
+  status: string;
+  contactPhone: string;
+  currentLocation: string;
+  teamLatitude: number;
+  teamLongitude: number;
+  distanceKm: number;
+  distanceDisplay: string;
+  vehicleNames: string[];
+};

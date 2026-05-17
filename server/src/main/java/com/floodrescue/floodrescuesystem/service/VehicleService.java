@@ -89,6 +89,21 @@ public class VehicleService {
     }
 
     @Transactional
+    public VehicleResponse updateVehicle(Long id, CreateVehicleRequest request) {
+        RescueVehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with ID: " + id));
+        vehicle.setName(request.getName());
+        vehicle.setType(request.getType());
+        vehicle.setLicensePlate(request.getLicensePlate());
+        vehicle.setCapacity(request.getCapacity());
+        vehicle.setCurrentLocation(request.getCurrentLocation());
+        vehicle.setNotes(request.getNotes());
+
+        RescueVehicle saved = vehicleRepository.save(vehicle);
+        return VehicleResponse.fromEntity(saved);
+    }
+
+    @Transactional
     public void deleteVehicle(Long id) {
         RescueVehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with ID: " + id));

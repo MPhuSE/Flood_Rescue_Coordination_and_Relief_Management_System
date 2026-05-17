@@ -31,16 +31,19 @@ public class FloodAlertController {
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR', 'MANAGER')")
     public ApiResponse<FloodAlertResponse> createAlert(Authentication auth, @Valid @RequestBody CreateFloodAlertRequest request) {
         return ApiResponse.success("Created alert", floodAlertService.createAlert(auth.getName(), request));
     }
 
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR', 'MANAGER')")
     public ApiResponse<FloodAlertResponse> updateAlert(@PathVariable Long id, @Valid @RequestBody CreateFloodAlertRequest request) {
         return ApiResponse.success("Updated alert", floodAlertService.updateAlert(id, request));
     }
 
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR', 'MANAGER')")
     public ApiResponse<Void> deleteAlert(@PathVariable Long id) {
         floodAlertService.deleteAlert(id);
         return ApiResponse.success("Deleted alert", null);

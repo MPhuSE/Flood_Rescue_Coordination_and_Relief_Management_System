@@ -1,6 +1,7 @@
 import { type ReactElement, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuthStore } from "./hooks/useAuthStore";
+import { authActions } from "./store/authStore";
 import { userActions } from "./store/userStore";
 import { useUserStore } from "./hooks/useUserStore";
 
@@ -64,8 +65,15 @@ export default function App() {
   const isAuthenticated = useAuthStore((state) => state.accessToken.length > 0);
 
   useEffect(() => {
-    if (!isAuthenticated) { userActions.clear(); return; }
-    void userActions.loadMyProfile().catch(() => undefined);
+    if (!isAuthenticated) {
+      userActions.clear();
+      return;
+    }
+    userActions.loadMyProfile().catch((error) => {
+      if (error && (error.status === 401 || error.status === 403)) {
+        authActions.logout();
+      }
+    });
   }, [isAuthenticated]);
 
   return (
@@ -76,12 +84,12 @@ export default function App() {
 
       <Route path="/dashboard" element={<DashboardRoute allowedRoles={["ADMIN", "MANAGER", "COORDINATOR"]}><DashboardPage /></DashboardRoute>} />
       <Route path="/map" element={<DashboardRoute><MapPage /></DashboardRoute>} />
-      <Route path="/rescue-requests" element={<DashboardRoute allowedRoles={["CITIZEN", "COORDINATOR", "RESCUER", "ADMIN"]}><RescueRequestsPage /></DashboardRoute>} />
+      <Route path="/rescue-requests" element={<DashboardRoute allowedRoles={["CITIZEN", "COORDINATOR", "RESCUER", "MANAGER", "ADMIN"]}><RescueRequestsPage /></DashboardRoute>} />
       <Route path="/teams" element={<DashboardRoute allowedRoles={["ADMIN", "COORDINATOR"]}><TeamsPage /></DashboardRoute>} />
       <Route path="/vehicles" element={<DashboardRoute allowedRoles={["ADMIN", "MANAGER", "COORDINATOR"]}><VehiclesPage /></DashboardRoute>} />
       <Route path="/relief" element={<DashboardRoute allowedRoles={["ADMIN", "MANAGER"]}><ReliefPage /></DashboardRoute>} />
-      <Route path="/shelters" element={<DashboardRoute allowedRoles={["CITIZEN", "ADMIN", "MANAGER"]}><SheltersPage /></DashboardRoute>} />
-      <Route path="/alerts" element={<DashboardRoute allowedRoles={["CITIZEN", "ADMIN", "MANAGER"]}><AlertsPage /></DashboardRoute>} />
+      <Route path="/shelters" element={<DashboardRoute allowedRoles={["CITIZEN", "COORDINATOR", "RESCUER", "MANAGER", "ADMIN"]}><SheltersPage /></DashboardRoute>} />
+      <Route path="/alerts" element={<DashboardRoute allowedRoles={["CITIZEN", "COORDINATOR", "RESCUER", "MANAGER", "ADMIN"]}><AlertsPage /></DashboardRoute>} />
       <Route path="/notifications" element={<DashboardRoute><NotificationsPage /></DashboardRoute>} />
       <Route path="/admin/users" element={<DashboardRoute allowedRoles={["ADMIN"]}><AdminUsersPage /></DashboardRoute>} />
       <Route path="/profile" element={<DashboardRoute><ProfilePage /></DashboardRoute>} />

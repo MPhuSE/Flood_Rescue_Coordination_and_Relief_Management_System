@@ -3,7 +3,7 @@ import type { ApiResponse } from "../types/api";
 import type {
   RescueRequest, CreateRescueRequest, RescueTeam, RescueVehicle,
   ReliefItem, ReliefDistribution, Shelter, FloodAlert,
-  Notification, DashboardStats,
+  Notification, DashboardStats, NearbyTeamSuggestion,
 } from "../types/rescue";
 import type { UserProfile } from "../types/user";
 
@@ -18,6 +18,7 @@ export const rescueApi = {
   update: (id: number, d: CreateRescueRequest) => http.put<ApiResponse<RescueRequest>>(`/rescue-requests/${id}`, d).then(r => r.data.data),
   updateStatus: (id: number, status: string) => http.patch<ApiResponse<RescueRequest>>(`/rescue-requests/${id}/status`, { status }).then(r => r.data.data),
   updateUrgency: (id: number, urgency: string) => http.patch<ApiResponse<RescueRequest>>(`/rescue-requests/${id}/urgency`, { status: urgency }).then(r => r.data.data),
+  getNearbyTeams: (id: number) => http.get<ApiResponse<NearbyTeamSuggestion[]>>(`/rescue-requests/${id}/nearby-teams`).then(r => r.data.data),
   assignTeam: (id: number, teamId: number) => http.patch<ApiResponse<RescueRequest>>(`/rescue-requests/${id}/assign`, { teamId }).then(r => r.data.data),
   confirmRescued: (id: number) => http.patch<ApiResponse<RescueRequest>>(`/rescue-requests/${id}/confirm-rescued`).then(r => r.data.data),
   updateLocation: (id: number, location: {latitude: number, longitude: number}) => http.patch<ApiResponse<RescueRequest>>(`/rescue-requests/${id}/location`, location).then(r => r.data.data),
@@ -42,6 +43,7 @@ export const teamApi = {
   getById: (id: number) => http.get<ApiResponse<RescueTeam>>(`/rescue-teams/${id}`).then(r => r.data.data),
   create: (d: Partial<RescueTeam>) => http.post<ApiResponse<RescueTeam>>("/rescue-teams", d).then(r => r.data.data),
   update: (id: number, d: Partial<RescueTeam>) => http.put<ApiResponse<RescueTeam>>(`/rescue-teams/${id}`, d).then(r => r.data.data),
+  updateStatus: (id: number, status: string) => http.patch<ApiResponse<RescueTeam>>(`/rescue-teams/${id}/status`, { status }).then(r => r.data.data),
   updateLocation: (id: number, location: {latitude: number, longitude: number}) => http.patch<ApiResponse<RescueTeam>>(`/rescue-teams/${id}/location`, location).then(r => r.data.data),
   delete: (id: number) => http.delete<ApiResponse<void>>(`/rescue-teams/${id}`),
 };
@@ -60,11 +62,15 @@ export const vehicleApi = {
 // ─── Relief ───
 export const reliefApi = {
   getItems: () => http.get<ApiResponse<ReliefItem[]>>("/relief/items").then(r => r.data.data),
+  getItemById: (id: number) => http.get<ApiResponse<ReliefItem>>(`/relief/items/${id}`).then(r => r.data.data),
+  getItemsByCategory: (category: string) => http.get<ApiResponse<ReliefItem[]>>(`/relief/items/category/${category}`).then(r => r.data.data),
+  getLowStockItems: () => http.get<ApiResponse<ReliefItem[]>>("/relief/items/low-stock").then(r => r.data.data),
   createItem: (d: Partial<ReliefItem>) => http.post<ApiResponse<ReliefItem>>("/relief/items", d).then(r => r.data.data),
   updateItem: (id: number, d: Partial<ReliefItem>) => http.put<ApiResponse<ReliefItem>>(`/relief/items/${id}`, d).then(r => r.data.data),
   deleteItem: (id: number) => http.delete<ApiResponse<void>>(`/relief/items/${id}`),
   getDistributions: () => http.get<ApiResponse<ReliefDistribution[]>>("/relief/distributions").then(r => r.data.data),
-  distribute: (d: Partial<ReliefDistribution>) => http.post<ApiResponse<ReliefDistribution>>("/relief/distribute", d).then(r => r.data.data),
+  getDistributionsByItem: (itemId: number) => http.get<ApiResponse<ReliefDistribution[]>>(`/relief/distributions/item/${itemId}`).then(r => r.data.data),
+  distribute: (d: Partial<ReliefDistribution>) => http.post<ApiResponse<ReliefDistribution>>("/relief/distributions", d).then(r => r.data.data),
 };
 
 // ─── Shelters ───
@@ -89,6 +95,7 @@ export const alertApi = {
 export const notifApi = {
   getAll: () => http.get<ApiResponse<Notification[]>>("/notifications").then(r => r.data.data),
   getUnread: () => http.get<ApiResponse<Notification[]>>("/notifications/unread").then(r => r.data.data),
+  getUnreadCount: () => http.get<ApiResponse<number>>("/notifications/unread/count").then(r => r.data.data),
   markRead: (id: number) => http.patch<ApiResponse<void>>(`/notifications/${id}/read`),
   markAllRead: () => http.patch<ApiResponse<void>>("/notifications/read-all"),
 };

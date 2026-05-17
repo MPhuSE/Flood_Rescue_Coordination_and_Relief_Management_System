@@ -22,4 +22,9 @@ export const authService = {
     const response = await http.post<ApiResponse<AuthResponsePayload>>("/auth/refresh", payload);
     return response.data.data;
   },
+  
+  async logout() {
+    const response = await http.post<ApiResponse<void>>("/auth/logout");
+    return response.data;
+  },
 };

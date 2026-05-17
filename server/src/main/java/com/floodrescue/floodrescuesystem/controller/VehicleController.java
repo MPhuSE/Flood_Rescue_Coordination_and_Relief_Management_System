@@ -25,6 +25,7 @@ public class VehicleController {
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Thêm phương tiện", description = "Thêm phương tiện cứu hộ mới")
     public ApiResponse<VehicleResponse> createVehicle(@Valid @RequestBody CreateVehicleRequest request) {
         return ApiResponse.success("Vehicle created", vehicleService.createVehicle(request));
@@ -49,6 +50,7 @@ public class VehicleController {
     }
 
     @PatchMapping("/{id}/status")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'COORDINATOR')")
     @Operation(summary = "Cập nhật trạng thái", description = "Cập nhật trạng thái phương tiện")
     public ApiResponse<VehicleResponse> updateStatus(
             @PathVariable Long id,
@@ -57,6 +59,7 @@ public class VehicleController {
     }
 
     @PatchMapping("/{id}/assign-team")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'COORDINATOR')")
     @Operation(summary = "Giao phương tiện cho đội", description = "Giao phương tiện cho một đội cứu hộ")
     public ApiResponse<VehicleResponse> assignToTeam(
             @PathVariable Long id,
@@ -64,7 +67,17 @@ public class VehicleController {
         return ApiResponse.success("Vehicle assigned to team", vehicleService.assignVehicleToTeam(id, request.getTeamId()));
     }
 
+    @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Cập nhật phương tiện", description = "Cập nhật thông tin chi tiết phương tiện")
+    public ApiResponse<VehicleResponse> updateVehicle(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateVehicleRequest request) {
+        return ApiResponse.success("Vehicle updated", vehicleService.updateVehicle(id, request));
+    }
+
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Xóa phương tiện", description = "Xóa phương tiện cứu hộ")
     public ApiResponse<Void> deleteVehicle(@PathVariable Long id) {
         vehicleService.deleteVehicle(id);
